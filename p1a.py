@@ -1,24 +1,51 @@
+import os
+import cv2
 import torch
 import torchvision
 import torch.nn as nn
 import torchvision.datasets as dset
-from torch.utils.data import DataLoader
-import torchvision.transforms as transforms
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms, utils
 import torch.optim as optim
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from skimage import io, transform
 from torch.autograd import Variable
 
 #CONFIG
 training_txt = 'train.txt'
 testing_txt = 'test.txt'
-img_dir = './lfw/'
+root_dir = './lfw/'
+image_size = (128,128)
+plt.ion()	# interactive mode
 
+class LFWDataset(Dataset):
+	def __init__(self, txt_file, root_dir, transform=False):
+		"""
+		Args:
+			txt_file (string): Path to the txt file with names of pictures
+			root_dir (string): Directory with all the images.
+			transform (callable, optional): Optional random transform to be applied on a sample.
+		"""
+		self.txt_file = pd.read_csv(txt_file, delim_whitespace=True, header=None)
+		self.root_dir = root_dir    
+		self.transform = transform
 
-class LFW_Dataset(Dataset):
-	def __init__(self, txt_path, randomtransform=False):
-		self.txt_path = txt_path    
-		self.randomtransform = randomtransform
+	def __len__(self):
+		return len(self.txt_file)
+
+	def __getitem__(self, idx):
+		image1name = os.path.join(root_dir, txt_file.iloc[idx, 0])
+		image2name = os.path.join(root_dir, txt_file.iloc[idx, 1])
+		label = txt_file.iloc[idx, 2]
+		#Resizes so all images are (128,128) as per architecture
+		image1 = cv2.resize(io.imread(image1name), image_size)
+		image2 = cv2.resize(io.imread(image2name), image_size)
+		sample = {'image1': image1, 'image2': image2, 'label': label}
+		return sample
+
+		#ADD TRANSFORM IF STATEMENT HERE
 
 class Siamese(nn.Module):
 	def __init__(self):
@@ -86,6 +113,10 @@ class Siamese(nn.Module):
 		
 		return output
 
+lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir)
+
+
+
 # LOSS
 loss_fn = nn.BCELoss()
 learning_rate = 1e-6
@@ -93,7 +124,7 @@ learning_rate = 1e-6
 # HELPER 
 
 def imshow(img):
-	npimg = img.numpy()
+	npimg = np.asarray(img)
 	plt.imshow(np.transpose(npimg, (1,2,0)))
 	plt.show()
 
