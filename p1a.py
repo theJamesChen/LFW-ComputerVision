@@ -53,49 +53,49 @@ class Siamese(nn.Module):
 		#Make two sequential models to in order to implement flatten using view()
 		self.model = nn.Sequential(
 			# 1
-			nn.Conv2d(3, 64, 5, stride=(1,1), padding=2) #(in_channel size, out_channels size, kernel_size, stride, padding)
+			nn.Conv2d(3, 64, 5, stride=(1,1), padding=2), #(in_channel size, out_channels size, kernel_size, stride, padding)
 			# 2
-			nn.ReLU(inplace=True)
+			nn.ReLU(inplace=True),
 			# 3
-			nn.BatchNorm2d(64) #64 features
+			nn.BatchNorm2d(64), #64 features
 			# 4
-			nn.MaxPool2d((2,2)) #(kernel_size, stride= (default kernel_size))
+			nn.MaxPool2d((2,2)), #(kernel_size, stride= (default kernel_size))
 			# 5
-			nn.Conv2d(64, 128, 5, stride=(1,1), padding=2)
+			nn.Conv2d(64, 128, 5, stride=(1,1), padding=2),
 			# 6
-			nn.ReLU(inplace=True)
+			nn.ReLU(inplace=True),
 			# 7
-			nn.BatchNorm2d(128) #128 features
+			nn.BatchNorm2d(128), #128 features
 			# 8
-			nn.MaxPool2d((2,2))
+			nn.MaxPool2d((2,2)),
 			# 9
-			nn.Conv2d(128, 256, 3, stride=(1,1), padding=1)
+			nn.Conv2d(128, 256, 3, stride=(1,1), padding=1),
 			# 10
-			nn.ReLU(inplace=True)
+			nn.ReLU(inplace=True),
 			# 11
-			nn.BatchNorm2d(256)
+			nn.BatchNorm2d(256),
 			# 12
-			nn.MaxPool2d((2,2))
+			nn.MaxPool2d((2,2)),
 			# 13
-			nn.Conv2d(256, 512, 3, stride=(1,1), padding=1)
+			nn.Conv2d(256, 512, 3, stride=(1,1), padding=1),
 			# 14
-			nn.ReLU(inplace=True)
+			nn.ReLU(inplace=True),
 			# 15
 			nn.BatchNorm2d(512))
 
 		#Feed flatten layer to here
 		self.fullyconnectedmodel = nn.Sequential(
 			# 17
-			nn.Linear(131072, 1024)
+			nn.Linear(131072, 1024),
 			# 18
-			nn.ReLU(inplace=True)
+			nn.ReLU(inplace=True),
 			# 19
-			nn.BatchNorm1d(1024)
+			nn.BatchNorm1d(1024),
 			)
 
 		self.fullyconnectedmodelconcatenated = nn.Sequential(
 			# 20
-			nn.Linear(2048, 1)
+			nn.Linear(2048, 1),
 			# 21
 			nn.Sigmoid()
 			)
@@ -115,7 +115,7 @@ class Siamese(nn.Module):
 
 lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir)
 
-
+dataloader = DataLoader(lfw, batch_size=8, shuffle=True, num_workers=4)
 
 # LOSS
 loss_fn = nn.BCELoss()
