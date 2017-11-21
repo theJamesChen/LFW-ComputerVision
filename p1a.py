@@ -18,7 +18,16 @@ training_txt = 'train.txt'
 testing_txt = 'test.txt'
 root_dir = './lfw/'
 image_size = (128,128)
+batch_size = 8
+learning_rate = 1e-6
 plt.ion()	# interactive mode
+
+#SETUP DATASETS AND DATALOADERS
+training_lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir)
+training_dataloader = DataLoader(training_lfw, batch_size=batch_size, shuffle=True, num_workers=8)
+
+testing_lfw = LFWDataset(txt_file=testing_txt, root_dir=root_dir)
+testing_dataloader = DataLoader(testing_lfw, batch_size=batch_size, shuffle=True, num_workers=8)
 
 class LFWDataset(Dataset):
 	def __init__(self, txt_file, root_dir, transform=False):
@@ -36,9 +45,9 @@ class LFWDataset(Dataset):
 		return len(self.txt_file)
 
 	def __getitem__(self, idx):
-		image1name = os.path.join(root_dir, txt_file.iloc[idx, 0])
-		image2name = os.path.join(root_dir, txt_file.iloc[idx, 1])
-		label = txt_file.iloc[idx, 2]
+		image1name = os.path.join(self.root_dir, self.txt_file.iloc[idx, 0])
+		image2name = os.path.join(self.root_dir, self.txt_file.iloc[idx, 1])
+		label = self.txt_file.iloc[idx, 2]
 		#Resizes so all images are (128,128) as per architecture
 		image1 = cv2.resize(io.imread(image1name), image_size)
 		# swap color axis because, numpy image: H x W x C, torch image: C X H X W
@@ -53,7 +62,7 @@ class LFWDataset(Dataset):
 class Siamese(nn.Module):
 	def __init__(self):
 		super(Siamese, self).__init__()
-		#Make two sequential models to in order to implement flatten using view()
+		#Make three sequential models to in order to implement flatten using view() and sigmoid activation
 		self.model = nn.Sequential(
 			# 1
 			nn.Conv2d(3, 64, 5, stride=(1,1), padding=2), #(in_channel size, out_channels size, kernel_size, stride, padding)
@@ -116,22 +125,56 @@ class Siamese(nn.Module):
 		
 		return output
 
-lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir)
-
-dataloader = DataLoader(lfw, batch_size=8, shuffle=True, num_workers=8)
 
 # LOSS
-loss_fn = nn.BCELoss()
-learning_rate = 1e-6
-
+criterion = nn.BCELoss()
 model = Siamese() # On CPU
+model.float()
 # model = Siamese().cuda() # On GPU
+optimizer = optim.Adam(model.parameters(),lr = learning_rate)
+
+loss_history = []
+iteration_history =[]
+iteration_count = 0
+
+def train(epoch):
+	global loss_history, iteration_history, iteration_count
+
+	#Setting network to train
+	model.train()
+	for batch_idx, data in enumerate(training_dataloader):
+		# image1, image2, label = data['image1'].cuda(), data['image2'].cuda(), data['label'].cuda() # On GPU
+		image1, image2, label = Variable(data['image1'].float()), Variable(data['image2'].float()), Variable(data['label'].float())
+		#print image1
+		output = model(image1,image2)
+		#Zero the gradients
+		optimizer.zero_grad()
+		loss = criterion(torch.squeeze(output), label)
+		loss.backward()
+		optimizer.step()
+
+		if batch_idx % 10 == 0:
+			#print "Epoch %d, Batch Progress %d Loss %f" % (epoch, batch_idx, loss.data[0])
+			print('Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(image1), len(training_dataloader.dataset), 100. * batch_idx / len(training_dataloader), loss.data[0]))
+			iteration_count += 10
+			iteration_history.append(iteration_count)
+			loss_history.append(loss.data[0])
+
+#Training Model
+
+for epoch in range(1, 3):
+	train(epoch)
+
+# Plot Loss
+
+plt.plot(iteration,loss)
+plt.show()
 
 
 # Debug
 # Show example batch
 
-dataiter = iter(dataloader)
+dataiter = iter(training_dataloader)
 example_batch = next(dataiter)
 concatenated = torch.cat((example_batch['image1'],example_batch['image2']),0)
 grid = utils.make_grid(concatenated)
