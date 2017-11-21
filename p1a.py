@@ -41,7 +41,10 @@ class LFWDataset(Dataset):
 		label = txt_file.iloc[idx, 2]
 		#Resizes so all images are (128,128) as per architecture
 		image1 = cv2.resize(io.imread(image1name), image_size)
+		# swap color axis because, numpy image: H x W x C, torch image: C X H X W
+		image1 = np.transpose(image1, (2,0,1))
 		image2 = cv2.resize(io.imread(image2name), image_size)
+		image2 = np.transpose(image2, (2,0,1))
 		sample = {'image1': image1, 'image2': image2, 'label': label}
 		return sample
 
@@ -115,18 +118,23 @@ class Siamese(nn.Module):
 
 lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir)
 
-dataloader = DataLoader(lfw, batch_size=8, shuffle=True, num_workers=4)
+dataloader = DataLoader(lfw, batch_size=8, shuffle=True, num_workers=8)
 
 # LOSS
 loss_fn = nn.BCELoss()
 learning_rate = 1e-6
 
-# HELPER 
-
-def imshow(img):
-	npimg = np.asarray(img)
-	plt.imshow(np.transpose(npimg, (1,2,0)))
-	plt.show()
+model = Siamese() # On CPU
+# model = Siamese().cuda() # On GPU
 
 
+# Debug
+# Show example batch
 
+dataiter = iter(dataloader)
+example_batch = next(dataiter)
+concatenated = torch.cat((example_batch['image1'],example_batch['image2']),0)
+grid = utils.make_grid(concatenated)
+plt.imshow(grid.numpy().transpose((1, 2, 0)))
+plt.title('Batch from dataloader')
+plt.axis('off')
