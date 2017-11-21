@@ -13,7 +13,7 @@ import pandas as pd
 from skimage import io, transform
 from torch.autograd import Variable
 
-#CONFIG
+# ******* CONFIG *******
 training_txt = 'train.txt'
 testing_txt = 'test.txt'
 root_dir = './lfw/'
@@ -22,12 +22,7 @@ batch_size = 8
 learning_rate = 1e-6
 plt.ion()	# interactive mode
 
-#SETUP DATASETS AND DATALOADERS
-training_lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir)
-training_dataloader = DataLoader(training_lfw, batch_size=batch_size, shuffle=True, num_workers=8)
-
-testing_lfw = LFWDataset(txt_file=testing_txt, root_dir=root_dir)
-testing_dataloader = DataLoader(testing_lfw, batch_size=batch_size, shuffle=True, num_workers=8)
+# ******* CLASSES *******
 
 class LFWDataset(Dataset):
 	def __init__(self, txt_file, root_dir, transform=False):
@@ -125,8 +120,14 @@ class Siamese(nn.Module):
 		
 		return output
 
+# ******* SETUP DATASETS AND DATALOADERS *******
+training_lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir)
+training_dataloader = DataLoader(training_lfw, batch_size=batch_size, shuffle=True, num_workers=4)
 
-# LOSS
+testing_lfw = LFWDataset(txt_file=testing_txt, root_dir=root_dir)
+testing_dataloader = DataLoader(testing_lfw, batch_size=batch_size, shuffle=True, num_workers=4)
+
+# ******* MODEL PARAM SETUP *******
 criterion = nn.BCELoss()
 model = Siamese() # On CPU
 model.float()
@@ -136,6 +137,8 @@ optimizer = optim.Adam(model.parameters(),lr = learning_rate)
 loss_history = []
 iteration_history =[]
 iteration_count = 0
+
+# ******* TRAINING *******
 
 def train(epoch):
 	global loss_history, iteration_history, iteration_count
@@ -160,24 +163,25 @@ def train(epoch):
 			iteration_history.append(iteration_count)
 			loss_history.append(loss.data[0])
 
-#Training Model
-
 for epoch in range(1, 3):
 	train(epoch)
+	torch.save(net.state_dict(), args.save[0])
 
-# Plot Loss
+print "<----------------", "Training Complete", "---------------->"
 
-plt.plot(iteration,loss)
+# ******* PLOT LOSS *******
+
+plt.plot(iteration_history,loss_history)
 plt.show()
 
 
 # Debug
 # Show example batch
 
-dataiter = iter(training_dataloader)
-example_batch = next(dataiter)
-concatenated = torch.cat((example_batch['image1'],example_batch['image2']),0)
-grid = utils.make_grid(concatenated)
-plt.imshow(grid.numpy().transpose((1, 2, 0)))
-plt.title('Batch from dataloader')
-plt.axis('off')
+# dataiter = iter(training_dataloader)
+# example_batch = next(dataiter)
+# concatenated = torch.cat((example_batch['image1'],example_batch['image2']),0)
+# grid = utils.make_grid(concatenated)
+# plt.imshow(grid.numpy().transpose((1, 2, 0)))
+# plt.title('Batch from dataloader')
+# plt.axis('off')
