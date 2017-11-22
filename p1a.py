@@ -6,6 +6,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import torch.optim as optim
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -13,7 +14,7 @@ from skimage import io, transform, img_as_float
 from torch.autograd import Variable
 import random
 import argparse
-matplotlib.use('Agg')
+plt.use('Agg')
 
 # ******* CONFIG *******
 class Config():
