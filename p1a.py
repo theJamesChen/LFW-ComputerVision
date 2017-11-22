@@ -144,7 +144,7 @@ class LFWDataset(Dataset):
 		root_dir (string): Directory with all the images.
 		transform (callable, optional): Optional random transform to be applied on a sample:
 			mirror flipping, rotation (+/- 30 degrees rotation wrt the center), translation (+/- 10 pixels), scaling (0.7 to 1.3)
-			Any borders that don’t have valid image data make black
+			Any borders that don't have valid image data make black
 		"""
 		self.txt_file = pd.read_csv(txt_file, delim_whitespace=True, header=None)
 		self.root_dir = root_dir    
@@ -394,7 +394,8 @@ def main():
 # ******* SAVE *******	
 	if args.save is not None:
 		 print "Train and save weight data into:", args.save, "with ", args.epoch, " epochs"
-		 train(args.epoch, transform, args.save, gpu):
+		 train(args.epoch, transform, args.save, gpu)
+		 print "<----------------", "SAVE DONE", "---------------->"
 
 # ******* LOAD *******	
 	if args.load is not None:
@@ -409,6 +410,7 @@ def main():
 		 print "<----------------", "Summary", "---------------->"
 		 print "Training Accuracy", training_data_accuracy
 		 print "Testing Accuracy", testing_data_accuracy
+		 print "<----------------", "LOAD DONE", "---------------->"
 
 if __name__ == '__main__':
 	main()
