@@ -252,18 +252,6 @@ class Siamese(nn.Module):
 		
 		return output
 
-# ******* MODEL PARAM SETUP *******
-print "<----------------", "Model Param Setup", "---------------->"
-if gpu:
-	criterion = nn.BCELoss().cuda() #On GPU
-	model = Siamese().cuda() # On GPU
-else:
-	criterion = nn.BCELoss()# On CPU
-	model = Siamese() # On CPU
-model.float()
-optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
-
-
 # ******* TRAINING *******
 
 def train(epoch, randomTransform, savePath, gpu):
@@ -360,9 +348,9 @@ def savePlot(iteration_history, loss_history, text):
 def parse_args():
 	parser = argparse.ArgumentParser(description='James Chen: p1a')
 	parser.add_argument('--epoch', type=int, default=10,
-	                    help='Training epoch. Default is 10')
-	parser.add_argument("--load", help="Automatically load the saved network weights from the file WEIGHTS_FILE and test over both the train and test data, displaying accuracy statistics for both")
-	parser.add_argument("--save", help="Train and save weight data into WEIGHTS_FILE")
+	                    help='Number of training EPOCH. Default is 10')
+	parser.add_argument("--load", help="Automatically load the saved network weights from the file LOAD and test over both the train and test data, displaying accuracy statistics for both")
+	parser.add_argument("--save", help="Train and save weight data into SAVE")
 	# Switch
 	parser.add_argument('--cpu', action='store_true',
 						help='CPU mode ON')
@@ -414,6 +402,17 @@ def main():
 
 if __name__ == '__main__':
 	main()
+
+# ******* MODEL PARAM SETUP *******
+print "<----------------", "Model Param Setup", "---------------->"
+if gpu:
+	criterion = nn.BCELoss().cuda() #On GPU
+	model = Siamese().cuda() # On GPU
+else:
+	criterion = nn.BCELoss()# On CPU
+	model = Siamese() # On CPU
+model.float()
+optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
 
 
 # Debug
