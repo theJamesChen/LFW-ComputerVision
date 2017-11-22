@@ -14,7 +14,7 @@ from skimage import io, transform, img_as_float
 from torch.autograd import Variable
 import random
 import argparse
-plt.use('Agg')
+matplotlib.use('Agg')
 
 # ******* CONFIG *******
 class Config():
