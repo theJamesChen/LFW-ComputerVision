@@ -10,7 +10,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from skimage import io, transform
+from skimage import io, transform, img_as_float
 from torch.autograd import Variable
 import random
 
@@ -25,13 +25,24 @@ transform_probability = 0.7
 plt.ion()	# interactive mode
 
 # ******* CLASSES *******
+class ToTensor(object):
+	"""Convert ndarrays in sample to Tensors."""
+	def __call__(self, sample):
+		image1, image2, label = sample['image1'], sample['image2'], sample['label']
+		# swap color axis because
+		# numpy image: H x W x C
+		# torch image: C X H X W
+		image1 = image1.transpose((2, 0, 1))
+		image2 = image2.transpose((2, 0, 1))
+		return {'image1': torch.from_numpy(image1.copy()).float(), 'image2': torch.from_numpy(image2.copy()).float(), 'label': label}
+
 class RandomHorizontalFlip(object):
 	"""Horizontally flip the given sample randomly with a probability of 0.5."""
 	def __call__(self, sample):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
 		if random.random() < 0.5:
 			return {'image1': np.fliplr(image1), 'image2': np.fliplr(image2), 'label': label}
-		return {'image1': image1, 'image2': image2, 'label': label}
+		return sample
 
 class RandomVerticalFlip(object):
 	"""Vertically flip the given sample randomly with a probability of 0.5."""
@@ -39,7 +50,7 @@ class RandomVerticalFlip(object):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
 		if random.random() < 0.5:
 			return {'image1': np.flipud(image1), 'image2': np.flipud(image2), 'label': label}
-		return {'image1': image1, 'image2': image2, 'label': label}
+		return sample
 
 class RandomRotationCenter(object):
 	"""Rotates (+/- 30 degrees wrt the center) randomly with a probability of 0.5"""
@@ -52,7 +63,7 @@ class RandomRotationCenter(object):
 			image1 = transform.rotate(image1, theta, resize=False, mode='constant')
 			image2 = transform.rotate(image2, theta, resize=False, mode='constant')
 			return {'image1': image1, 'image2': image2, 'label': label}
-		return {'image1': image1, 'image2': image2, 'label': label}
+		return sample
 
 class RandomScaling(object):
 	"""Scales (0.7 to 1.3) randomly with a probability of 0.5, (scales first and then center crop/pad to (128,128)"""
@@ -63,7 +74,7 @@ class RandomScaling(object):
 			scalingfactor = random.uniform(0.7, 1.3)
 			th, tw = image_size
 			image1 = transform.rescale(image1, scalingfactor, mode='constant')
-			image2 = transform.rescale(image2, scalingfactor, mode='constant')
+			image2 = transform.rescale(image2, scalingfactor, mode='constant')            
 			if scalingfactor >= 1:
 				h, w, c = image1.shape
 				starth = int(round((h - th) / 2.))
@@ -73,13 +84,16 @@ class RandomScaling(object):
 			else:
 				# Calculates the padding needed for when scaling factor < 1
 				h_rescale, w_rescale, c_rescale = image1.shape
-				diff = int(round((th - h_rescale)/2))
+				diff = th - h_rescale
+				diff1, diff2 = diff//2, diff//2                
+				if diff % 2 != 0:
+					diff1, diff2 = diff//2, diff//2 + 1
 				# npad is a tuple of (n_before, n_after) for each dimension
-				npad = ((diff, diff), (diff, diff), (0, 0))
+				npad = ((diff1, diff2), (diff1, diff2), (0, 0))
 				image1 = np.pad(image1, npad , mode='constant')
 				image2 = np.pad(image2, npad, mode='constant')
 			return {'image1': image1, 'image2': image2, 'label': label}
-		return {'image1': image1, 'image2': image2, 'label': label}
+		return sample
 
 class RandomTranslation(object):
 	"""Translates (-10 to 10) randomly with a probability of 0.5"""
@@ -92,10 +106,10 @@ class RandomTranslation(object):
 			image1 = transform.warp(image1, transform.AffineTransform(translation = (x_translation, y_translation)), mode='constant')
 			image2 = transform.warp(image2, transform.AffineTransform(translation = (x_translation, y_translation)), mode='constant')
 			return {'image1': image1, 'image2': image2, 'label': label}
-		return {'image1': image1, 'image2': image2, 'label': label}
+		return sample
 
 class LFWDataset(Dataset):
-	def __init__(self, txt_file, root_dir, transform=False):
+	def __init__(self, txt_file, root_dir, transform):
 		"""
 		Args:
 			txt_file (string): Path to the txt file with names of pictures
@@ -116,25 +130,33 @@ class LFWDataset(Dataset):
 			image2name = os.path.join(self.root_dir, self.txt_file.iloc[idx, 1])
 			label = self.txt_file.iloc[idx, 2]
 			#Resizes so all images are (128,128) as per architecture
-			image1 = cv2.resize(io.imread(image1name), image_size)
-			image2 = cv2.resize(io.imread(image2name), image_size)
+			image1 = img_as_float(cv2.resize(io.imread(image1name), image_size))
+			image2 = img_as_float(cv2.resize(io.imread(image2name), image_size))
 
-			sample = {'image1': image1, 'image2': image2, 'label': label}
-
+			sample = {'image1': image1, 'image2': image2, 'label': np.uint8(label)}
+            
 			#Random transforms
 			if self.transform:
 				if random.random() < transform_probability:
 					composed = [RandomHorizontalFlip(), RandomVerticalFlip(), RandomRotationCenter(), RandomScaling(), RandomTranslation()]
 					random.shuffle(composed) #IN PLACE SHUFFLE
-					self.transform = transforms.Compose(composed)
-					sample = self.transform(sample)
-
+					#self.transform = transforms.Compose(composed)
+					for t in composed:
+						sample = t(sample)
+					#sample = self.transform(sample)
+                    
 			# swap color axis because, numpy image: H x W x C, torch image: C X H X W
-			image1 = np.transpose(image1, (2,0,1))
-			image2 = np.transpose(image2, (2,0,1))
-			sample = {'image1': image1, 'image2': image2, 'label': label}  
-
-			return sample
+			#image1, image2, label = sample['image1'], sample['image2'], sample['label']
+			#image1 = np.transpose(image1, (2,0,1))
+			#image2 = np.transpose(image2, (2,0,1))
+			#print sample['image1'].shape
+			#sample = {'image1': image1, 'image2': image2, 'label': label}  
+			t = ToTensor()          
+			sample = t(sample)
+			#print sample['image1'].size
+			#print sample['image2'] 
+			#print sample['image2'].size
+			return sample 
 
 class Siamese(nn.Module):
 	def __init__(self):
@@ -203,7 +225,7 @@ class Siamese(nn.Module):
 		return output
 
 # ******* SETUP DATASETS AND DATALOADERS *******
-training_lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir)
+training_lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir, transform=False)
 training_dataloader = DataLoader(training_lfw, batch_size=batch_size, shuffle=True, num_workers=4)
 
 testing_lfw = LFWDataset(txt_file=testing_txt, root_dir=root_dir)
