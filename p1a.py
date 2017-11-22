@@ -3,7 +3,6 @@ import cv2
 import torch
 import torchvision
 import torch.nn as nn
-import torchvision.datasets as dset
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import torch.optim as optim
@@ -13,18 +12,24 @@ import pandas as pd
 from skimage import io, transform, img_as_float
 from torch.autograd import Variable
 import random
+import argparse
 
 # ******* CONFIG *******
-training_txt = 'train.txt'
-testing_txt = 'test.txt'
-root_dir = './lfw/'
-image_size = (128,128)
-batch_size = 8
-learning_rate = 1e-6
-transform_probability = 0.7
+class Config():
+	training_txt = 'train.txt'
+	testing_txt = 'test.txt'
+	root_dir = './lfw/'
+	image_size = (128,128)
+	batch_size = 8
+	learning_rate = 1e-6
+	transform_probability = 0.7
+
 plt.ion()	# interactive mode
 
 # ******* CLASSES *******
+
+# ----------> ******* TRANSFORMATIONS *******
+
 class ToTensor(object):
 	"""Convert ndarrays in sample to Tensors."""
 	def __call__(self, sample):
@@ -78,7 +83,7 @@ class RandomScaling(object):
 			# Between 0.7 to 1.3
 			scalingfactor1 = random.uniform(0.7, 1.3)
 			scalingfactor2 = random.uniform(0.7, 1.3)
-			th, tw = image_size
+			th, tw = Config.image_size
 			image1 = transform.rescale(image1, scalingfactor1, mode='constant')
 			image2 = transform.rescale(image2, scalingfactor2, mode='constant')            
 			if scalingfactor1 >= 1:
@@ -103,7 +108,7 @@ class RandomScaling(object):
 				image2 = image2[starth:starth+th,startw:startw+tw]
 			else:
 				# Calculates the padding needed for when scaling factor < 1
-				h_rescale, w_rescale, c_rescale = image1.shape
+				h_rescale, w_rescale, c_rescale = image2.shape
 				diff = th - h_rescale
 				diff1, diff2 = diff//2, diff//2                
 				if diff % 2 != 0:
@@ -120,12 +125,14 @@ class RandomTranslation(object):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
 		if random.random() < 0.5:
 			# Between -10 to 10
-			x_translation, y_translation = random.uniform(-10, 10)
+			x_translation, y_translation = random.uniform(-10, 10), random.uniform(-10, 10)
 			image1 = transform.warp(image1, transform.AffineTransform(translation = (x_translation, y_translation)), mode='constant')
-			x_translation, y_translation = random.uniform(-10, 10)
+			x_translation, y_translation = random.uniform(-10, 10), random.uniform(-10, 10)
 			image2 = transform.warp(image2, transform.AffineTransform(translation = (x_translation, y_translation)), mode='constant')
 			return {'image1': image1, 'image2': image2, 'label': label}
 		return sample
+
+# ----------> ******* DATASET *******
 
 class LFWDataset(Dataset):
 	def __init__(self, txt_file, root_dir, transform):
@@ -149,14 +156,14 @@ class LFWDataset(Dataset):
 			image2name = os.path.join(self.root_dir, self.txt_file.iloc[idx, 1])
 			label = self.txt_file.iloc[idx, 2]
 			#Resizes so all images are (128,128) as per architecture
-			image1 = img_as_float(cv2.resize(io.imread(image1name), image_size))
-			image2 = img_as_float(cv2.resize(io.imread(image2name), image_size))
+			image1 = img_as_float(cv2.resize(io.imread(image1name), Config.image_size))
+			image2 = img_as_float(cv2.resize(io.imread(image2name), Config.image_size))
 
 			sample = {'image1': image1, 'image2': image2, 'label': np.uint8(label)}
             
 			#Random transforms
 			if self.transform:
-				if random.random() < transform_probability:
+				if random.random() < Config.transform_probability:
 					composed = [RandomHorizontalFlip(), RandomVerticalFlip(), RandomRotationCenter(), RandomScaling(), RandomTranslation()]
 					random.shuffle(composed) #IN PLACE SHUFFLE
 					#self.transform = transforms.Compose(composed)
@@ -243,59 +250,115 @@ class Siamese(nn.Module):
 		
 		return output
 
-# ******* SETUP DATASETS AND DATALOADERS *******
-training_lfw = LFWDataset(txt_file=training_txt, root_dir=root_dir, transform=False)
-training_dataloader = DataLoader(training_lfw, batch_size=batch_size, shuffle=True, num_workers=4)
-
-testing_lfw = LFWDataset(txt_file=testing_txt, root_dir=root_dir)
-testing_dataloader = DataLoader(testing_lfw, batch_size=batch_size, shuffle=True, num_workers=4)
-
 # ******* MODEL PARAM SETUP *******
 criterion = nn.BCELoss()
+# criterion = nn.BCELoss().cuda() #On GPU
 model = Siamese() # On CPU
-model.float()
 # model = Siamese().cuda() # On GPU
-optimizer = optim.Adam(model.parameters(),lr = learning_rate)
+model.float()
+optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
 
-loss_history = []
-iteration_history =[]
-iteration_count = 0
 
 # ******* TRAINING *******
 
-def train(epoch):
-	global loss_history, iteration_history, iteration_count
+def train(epoch, randomTransform):
+	'''randomTransform = TRUE for Data Augmentation '''
+	print "<----------------", "Begin Training with Data Augmentation", randomTransform, "---------------->"
+	loss_history = []
+	iteration_history =[]
+	iteration_count = 0
 
-	#Setting network to train
-	model.train()
-	for batch_idx, data in enumerate(training_dataloader):
-		# image1, image2, label = data['image1'].cuda(), data['image2'].cuda(), data['label'].cuda() # On GPU
-		image1, image2, label = Variable(data['image1'].float()), Variable(data['image2'].float()), Variable(data['label'].float())
-		#print image1
+	# ******* SETUP DATASETS AND DATALOADERS *******
+	print "<----------------", "Setup Datasets and Dataloaders", "---------------->"
+	training_lfw = LFWDataset(txt_file=Config.training_txt, root_dir=Config.root_dir, transform=randomTransform)
+	training_dataloader = DataLoader(training_lfw, batch_size=Config.batch_size, shuffle=True, num_workers=4)
+
+	for n_epoch in range(1, (epoch+1)):
+		#Setting network to train
+		model.train()
+		for batch_idx, data in enumerate(training_dataloader):
+			image1, image2, label = data['image1'], data['image2'], data['label']
+			# image1, image2, label = image1.cuda(), image2.cuda(), label.cuda() # On GPU
+			image1, image2, label = Variable(image1.float()), Variable(image2.float()), Variable(label.float())
+			output = model(image1,image2)
+			#Zero the gradients
+			optimizer.zero_grad()
+			loss = criterion(torch.squeeze(output), label)
+			loss.backward()
+			optimizer.step()
+
+			if batch_idx % 10 == 0:
+				#print "Epoch %d, Batch Progress %d Loss %f" % (n_epoch, batch_idx, loss.data[0])
+				print('Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(n_epoch, (batch_idx + 1) * len(image1), len(training_dataloader.dataset), 100. * (batch_idx + 1) / len(training_dataloader), loss.data[0]))
+				iteration_count += 10
+				iteration_history.append(iteration_count)
+				loss_history.append(loss.data[0])
+
+	print "<----------------", "Epochs Ran", "---------------->"
+	text = ["Training", "with Data Augmentation "]
+	savePlot(iteration_history, loss_history, text)
+	print "<----------------", "Plot Saved", "---------------->"
+
+# ******* TESTING *******
+
+def test(testfile):
+	'''testfile should be either Config.training_txt or Config.testing_txt '''
+	print "<----------------", "Begin Testing", "---------------->"
+	loss_history = []
+	iteration_history =[]
+	iteration_count = 0
+
+	# ******* SETUP DATASETS AND DATALOADERS *******
+	print "<----------------", "Setup Datasets and Dataloaders", "---------------->"
+	testing_lfw = LFWDataset(txt_file=testfile, root_dir=Config.root_dir, transform=False)
+	testing_dataloader = DataLoader(testing_lfw, batch_size=Config.batch_size, shuffle=True, num_workers=4)
+
+	model.eval()
+	correct = 0
+	for batch_idx, data in enumerate(testing_dataloader):
+		image1, image2, label = data['image1'], data['image2'], data['label']
+		# image1, image2, label = image1.cuda(), image2.cuda(), label.cuda() # On GPU
+		image1, image2, label = Variable(image1.float()), Variable(image2.float()), Variable(label.float())
 		output = model(image1,image2)
-		#Zero the gradients
-		optimizer.zero_grad()
 		loss = criterion(torch.squeeze(output), label)
-		loss.backward()
-		optimizer.step()
 
+		prediction = np.squeeze(output.data.numpy())
+
+		#Set > 0.5 to 1, < 0.5 to 0
+		prediction[prediction > 0.5] = 1
+		prediction[prediction <= 0.5] = 0
+
+		#Batch labels
+		correct += np.sum(np.equal(prediction, label))
 		if batch_idx % 10 == 0:
-			#print "Epoch %d, Batch Progress %d Loss %f" % (epoch, batch_idx, loss.data[0])
-			print('Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(image1), len(training_dataloader.dataset), 100. * batch_idx / len(training_dataloader), loss.data[0]))
 			iteration_count += 10
 			iteration_history.append(iteration_count)
 			loss_history.append(loss.data[0])
+	percentcorrect = float(correct)/Config.batch_size/len(testing_dataloader)
+	return percentcorrect, loss_history[end]
 
-for epoch in range(1, 3):
-	train(epoch)
-	torch.save(net.state_dict(), args.save[0])
+# ******* PLOT *******
 
-print "<----------------", "Training Complete", "---------------->"
+def savePlot(iteration_history, loss_history, text):
+	plt.plot(iteration_history,loss_history)
+	title = "Loss vs Iteration for " + text[0] + text[1]
+	plt.title(title)
+	#plt.show()
+	savetitle = "LossIteration" + text[0] + text[1]
+	plt.savefig(savetitle, bbox_inches='tight')
 
-# ******* PLOT LOSS *******
+# ******* PARSE ARGUMENTS *******
 
-plt.plot(iteration_history,loss_history)
-plt.show()
+def parse_args():
+    parser = argparse.ArgumentParser(description='James Chen: p1a')
+    yada yada
+    return something
+
+def main():
+    args = parse_args()
+
+if __name__ == '__main__':
+    main()
 
 
 # Debug
