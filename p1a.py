@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from skimage import io, transform
 from torch.autograd import Variable
+import random
 
 # ******* CONFIG *******
 training_txt = 'train.txt'
@@ -20,9 +21,68 @@ root_dir = './lfw/'
 image_size = (128,128)
 batch_size = 8
 learning_rate = 1e-6
+transform_probability = 0.7
 plt.ion()	# interactive mode
 
 # ******* CLASSES *******
+class ToTensor(object):
+	"""Convert ndarrays in sample to Tensors."""
+	def __call__(self, sample):
+		image1, image2, label = sample['image1'], sample['image2'], sample['label']
+
+		# swap color axis because
+		# numpy image: H x W x C
+		# torch image: C X H X W
+		image1 = np.transpose(image1,(2, 0, 1))
+		image2 = np.transpose(image2,(2, 0, 1))
+		return {'image1': torch.from_numpy(image1).float(), 'image2': torch.from_numpy(image2).float(), 'label': label}
+
+class RandomHorizontalFlip(object):
+	"""Horizontally flip the given sample randomly with a probability of 0.5."""
+	def __call__(self, sample):
+		image1, image2, label = sample['image1'], sample['image2'], sample['label']
+		if random.random() < 0.5:
+			return {'image1': np.fliplr(image1), 'image2': np.fliplr(image2), 'label': label}
+		return {'image1': image1, 'image2': image2, 'label': label}
+
+class RandomVerticalFlip(object):
+	"""Vertically flip the given sample randomly with a probability of 0.5."""
+	def __call__(self, sample):
+		image1, image2, label = sample['image1'], sample['image2'], sample['label']
+		if random.random() < 0.5:
+			return {'image1': np.flipud(image1), 'image2': np.flipud(image2), 'label': label}
+		return {'image1': image1, 'image2': image2, 'label': label}
+
+class RandomRotationCenter(object):
+	"""Rotates (+/- 30 degrees wrt the center) randomly with a probability of 0.5"""
+	def __call__(self, sample):
+		image1, image2, label = sample['image1'], sample['image2'], sample['label']
+		if random.random() < 0.5:
+			# Between +/- 30 degrees
+			theta = random.uniform(-30, 30)
+			# False so that rotated image does not exactly fits, pads with black
+			image1 = transform.rotate(image1, theta, resize=False, mode='constant')
+			image2 = transform.rotate(image2, theta, resize=False, mode='constant')
+			return {'image1': image1, 'image2': image2, 'label': label}
+		return {'image1': image1, 'image2': image2, 'label': label}
+
+class RandomScaling(object):
+	"""Scales (0.7 to 1.3) randomly with a probability of 0.5, (scales first and then center crop to (128,128)"""
+	def __call__(self, sample):
+		image1, image2, label = sample['image1'], sample['image2'], sample['label']
+		if random.random() < 0.5:
+			# Between 0.7 to 1.3
+			scalingfactor = random.uniform(0.7, 1.3)
+			image1 = transform.rescale(image1, scalingfactor, mode='constant')
+			image2 = transform.rescale(image2, scalingfactor, mode='constant')
+			h, w, c = image1.shape
+			th, tw = image_size
+			starth = int(round((h - th) / 2.))
+			startw = int(round((w - tw) / 2.))
+			image1 = image1[starth:starth+th,startw:startw+tw]
+			image2 = image2[starth:starth+th,startw:startw+tw]
+			return {'image1': image1, 'image2': image2, 'label': label}
+		return {'image1': image1, 'image2': image2, 'label': label}
 
 class LFWDataset(Dataset):
 	def __init__(self, txt_file, root_dir, transform=False):
@@ -30,7 +90,9 @@ class LFWDataset(Dataset):
 		Args:
 			txt_file (string): Path to the txt file with names of pictures
 			root_dir (string): Directory with all the images.
-			transform (callable, optional): Optional random transform to be applied on a sample.
+			transform (callable, optional): Optional random transform to be applied on a sample:
+				mirror flipping, rotation (+/- 30 degrees rotation wrt the center), translation (+/- 10 pixels), scaling (0.7 to 1.3)
+				Any borders that don’t have valid image data make black
 		"""
 		self.txt_file = pd.read_csv(txt_file, delim_whitespace=True, header=None)
 		self.root_dir = root_dir    
@@ -45,14 +107,23 @@ class LFWDataset(Dataset):
 		label = self.txt_file.iloc[idx, 2]
 		#Resizes so all images are (128,128) as per architecture
 		image1 = cv2.resize(io.imread(image1name), image_size)
-		# swap color axis because, numpy image: H x W x C, torch image: C X H X W
-		image1 = np.transpose(image1, (2,0,1))
 		image2 = cv2.resize(io.imread(image2name), image_size)
-		image2 = np.transpose(image2, (2,0,1))
-		sample = {'image1': image1, 'image2': image2, 'label': label}
-		return sample
 
-		#ADD TRANSFORM IF STATEMENT HERE
+		sample = {'image1': image1, 'image2': image2, 'label': label}
+
+		#Random transforms
+		if self.transform:
+			if random.random() < transform_probability:
+				transforms.Compose
+		else:
+			self.transform = ToTensor()
+			sample = self.transform(sample)
+
+		# swap color axis because, numpy image: H x W x C, torch image: C X H X W
+		# image1 = np.transpose(image1, (2,0,1))
+		# image2 = np.transpose(image2, (2,0,1))
+		
+		return sample
 
 class Siamese(nn.Module):
 	def __init__(self):
