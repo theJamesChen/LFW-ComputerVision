@@ -24,7 +24,7 @@ class Config():
 	learning_rate = 1e-6
 	transform_probability = 0.7
 
-plt.ion()	# interactive mode
+#plt.ion()	# interactive mode
 
 # ******* CLASSES *******
 
@@ -39,6 +39,8 @@ class ToTensor(object):
 		# torch image: C X H X W
 		image1 = image1.transpose((2, 0, 1))
 		image2 = image2.transpose((2, 0, 1))
+		if gpu:
+			return {'image1': torch.from_numpy(image1.copy()).float().cuda(), 'image2': torch.from_numpy(image2.copy()).float().cuda(), 'label': label}
 		return {'image1': torch.from_numpy(image1.copy()).float(), 'image2': torch.from_numpy(image2.copy()).float(), 'label': label}
 
 class RandomHorizontalFlip(object):
@@ -160,7 +162,7 @@ class LFWDataset(Dataset):
 			image2 = img_as_float(cv2.resize(io.imread(image2name), Config.image_size))
 
 			sample = {'image1': image1, 'image2': image2, 'label': np.uint8(label)}
-            
+			
 			#Random transforms
 			if self.transform:
 				if random.random() < Config.transform_probability:
@@ -170,7 +172,7 @@ class LFWDataset(Dataset):
 					for t in composed:
 						sample = t(sample)
 					#sample = self.transform(sample)
-                    
+					
 			# swap color axis because, numpy image: H x W x C, torch image: C X H X W
 			#image1, image2, label = sample['image1'], sample['image2'], sample['label']
 			#image1 = np.transpose(image1, (2,0,1))
@@ -251,17 +253,20 @@ class Siamese(nn.Module):
 		return output
 
 # ******* MODEL PARAM SETUP *******
-criterion = nn.BCELoss()
-# criterion = nn.BCELoss().cuda() #On GPU
-model = Siamese() # On CPU
-# model = Siamese().cuda() # On GPU
+print "<----------------", "Model Param Setup", "---------------->"
+if gpu:
+	criterion = nn.BCELoss().cuda() #On GPU
+	model = Siamese().cuda() # On GPU
+else:
+	criterion = nn.BCELoss()# On CPU
+	model = Siamese() # On CPU
 model.float()
 optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
 
 
 # ******* TRAINING *******
 
-def train(epoch, randomTransform):
+def train(epoch, randomTransform, savePath, gpu):
 	'''randomTransform = TRUE for Data Augmentation '''
 	print "<----------------", "Begin Training with Data Augmentation", randomTransform, "---------------->"
 	loss_history = []
@@ -278,7 +283,8 @@ def train(epoch, randomTransform):
 		model.train()
 		for batch_idx, data in enumerate(training_dataloader):
 			image1, image2, label = data['image1'], data['image2'], data['label']
-			# image1, image2, label = image1.cuda(), image2.cuda(), label.cuda() # On GPU
+			if gpu:
+				image1, image2, label = image1.cuda(), image2.cuda(), label.cuda() # On GPU
 			image1, image2, label = Variable(image1.float()), Variable(image2.float()), Variable(label.float())
 			output = model(image1,image2)
 			#Zero the gradients
@@ -298,16 +304,15 @@ def train(epoch, randomTransform):
 	text = ["Training", "with Data Augmentation "]
 	savePlot(iteration_history, loss_history, text)
 	print "<----------------", "Plot Saved", "---------------->"
+	torch.save(model.state_dict(), savePath)
+	print "<----------------", "Model Saved", "---------------->"
+
 
 # ******* TESTING *******
 
-def test(testfile):
+def test(testfile, gpu):
 	'''testfile should be either Config.training_txt or Config.testing_txt '''
 	print "<----------------", "Begin Testing", "---------------->"
-	loss_history = []
-	iteration_history =[]
-	iteration_count = 0
-
 	# ******* SETUP DATASETS AND DATALOADERS *******
 	print "<----------------", "Setup Datasets and Dataloaders", "---------------->"
 	testing_lfw = LFWDataset(txt_file=testfile, root_dir=Config.root_dir, transform=False)
@@ -317,25 +322,28 @@ def test(testfile):
 	correct = 0
 	for batch_idx, data in enumerate(testing_dataloader):
 		image1, image2, label = data['image1'], data['image2'], data['label']
-		# image1, image2, label = image1.cuda(), image2.cuda(), label.cuda() # On GPU
-		image1, image2, label = Variable(image1.float()), Variable(image2.float()), Variable(label.float())
+		if gpu:
+			image1, image2, label = image1.cuda(), image2.cuda(), label.cuda() # On GPU
+		image1, image2, label = Variable(image1.float(), volatile=True), Variable(image2.float(), volatile=True), Variable(label.float(), volatile=True)
 		output = model(image1,image2)
 		loss = criterion(torch.squeeze(output), label)
 
-		prediction = np.squeeze(output.data.numpy())
-
+		if gpu:
+			prediction = np.squeeze(output.cpu().data.numpy())
+		else:
+			prediction = np.squeeze(output.data.numpy())
 		#Set > 0.5 to 1, < 0.5 to 0
 		prediction[prediction > 0.5] = 1
 		prediction[prediction <= 0.5] = 0
 
 		#Batch labels
 		correct += np.sum(np.equal(prediction, label))
-		if batch_idx % 10 == 0:
-			iteration_count += 10
-			iteration_history.append(iteration_count)
-			loss_history.append(loss.data[0])
+	
 	percentcorrect = float(correct)/Config.batch_size/len(testing_dataloader)
-	return percentcorrect, loss_history[end]
+
+	print "Accuracy:", percentcorrect
+	print "<----------------", "Testing Complete", "---------------->"
+	return percentcorrect
 
 # ******* PLOT *******
 
@@ -350,15 +358,60 @@ def savePlot(iteration_history, loss_history, text):
 # ******* PARSE ARGUMENTS *******
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='James Chen: p1a')
-    yada yada
-    return something
+	parser = argparse.ArgumentParser(description='James Chen: p1a')
+	parser.add_argument('--epoch', type=int, default=10,
+	                    help='Training epoch. Default is 10')
+	parser.add_argument("--load", help="Automatically load the saved network weights from the file WEIGHTS_FILE and test over both the train and test data, displaying accuracy statistics for both")
+	parser.add_argument("--save", help="Train and save weight data into WEIGHTS_FILE")
+	# Switch
+	parser.add_argument('--cpu', action='store_true',
+						help='CPU mode ON')
+	# Switch
+	parser.add_argument('--transform', action='store_true',
+						help='Data Augmentation ON')
+	arg = parser.parse_args()
+	return arg
 
 def main():
-    args = parse_args()
+	global gpu 
+	args = parse_args()
+	# Default Values
+	gpu = True
+	transform = False
+	if args.cpu:
+		print "<----------------", "CPU MODE", "---------------->"
+		gpu = False
+	else:
+		print "<----------------", "GPU MODE", "---------------->"
+
+	if args.transform:
+		print "<----------------", "Data Augmentation ON", "---------------->"
+		transform = True
+	else:
+		print "<----------------", "Data Augmentation OFF", "---------------->"
+		transform = False
+
+# ******* SAVE *******	
+	if args.save is not None:
+		 print "Train and save weight data into:", args.save, "with ", args.epoch, " epochs"
+		 train(args.epoch, transform, args.save, gpu):
+
+# ******* LOAD *******	
+	if args.load is not None:
+		 print "Automatically load the saved network weights from the file ", args.load, "and test over both the train and test data, displaying accuracy statistics for both"
+		 print "<----------------", "Loading Saved Network Weights", "---------------->"
+		 model.load_state_dict(torch.load(args.load))
+		 print "<----------------", "Testing Training Data", "---------------->"
+		 training_data_accuracy = test(Config.training_txt, gpu)
+		 print "<----------------", "Testing Test Data", "---------------->"
+		 testing_data_accuracy = test(Config.testing_txt, gpu)
+
+		 print "<----------------", "Summary", "---------------->"
+		 print "Training Accuracy", training_data_accuracy
+		 print "Testing Accuracy", testing_data_accuracy
 
 if __name__ == '__main__':
-    main()
+	main()
 
 
 # Debug
