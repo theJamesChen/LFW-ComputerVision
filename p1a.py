@@ -25,18 +25,6 @@ transform_probability = 0.7
 plt.ion()	# interactive mode
 
 # ******* CLASSES *******
-class ToTensor(object):
-	"""Convert ndarrays in sample to Tensors."""
-	def __call__(self, sample):
-		image1, image2, label = sample['image1'], sample['image2'], sample['label']
-
-		# swap color axis because
-		# numpy image: H x W x C
-		# torch image: C X H X W
-		image1 = np.transpose(image1,(2, 0, 1))
-		image2 = np.transpose(image2,(2, 0, 1))
-		return {'image1': torch.from_numpy(image1).float(), 'image2': torch.from_numpy(image2).float(), 'label': label}
-
 class RandomHorizontalFlip(object):
 	"""Horizontally flip the given sample randomly with a probability of 0.5."""
 	def __call__(self, sample):
@@ -124,28 +112,29 @@ class LFWDataset(Dataset):
 		return len(self.txt_file)
 
 	def __getitem__(self, idx):
-		image1name = os.path.join(self.root_dir, self.txt_file.iloc[idx, 0])
-		image2name = os.path.join(self.root_dir, self.txt_file.iloc[idx, 1])
-		label = self.txt_file.iloc[idx, 2]
-		#Resizes so all images are (128,128) as per architecture
-		image1 = cv2.resize(io.imread(image1name), image_size)
-		image2 = cv2.resize(io.imread(image2name), image_size)
+			image1name = os.path.join(self.root_dir, self.txt_file.iloc[idx, 0])
+			image2name = os.path.join(self.root_dir, self.txt_file.iloc[idx, 1])
+			label = self.txt_file.iloc[idx, 2]
+			#Resizes so all images are (128,128) as per architecture
+			image1 = cv2.resize(io.imread(image1name), image_size)
+			image2 = cv2.resize(io.imread(image2name), image_size)
 
-		sample = {'image1': image1, 'image2': image2, 'label': label}
+			sample = {'image1': image1, 'image2': image2, 'label': label}
 
-		#Random transforms
-		if self.transform:
-			if random.random() < transform_probability:
-				transforms.Compose
-		else:
-			self.transform = ToTensor()
-			sample = self.transform(sample)
+			#Random transforms
+			if self.transform:
+				if random.random() < transform_probability:
+					composed = [RandomHorizontalFlip(), RandomVerticalFlip(), RandomRotationCenter(), RandomScaling(), RandomTranslation()]
+					random.shuffle(composed) #IN PLACE SHUFFLE
+					self.transform = transforms.Compose(composed)
+					sample = self.transform(sample)
 
-		# swap color axis because, numpy image: H x W x C, torch image: C X H X W
-		# image1 = np.transpose(image1, (2,0,1))
-		# image2 = np.transpose(image2, (2,0,1))
-		
-		return sample
+			# swap color axis because, numpy image: H x W x C, torch image: C X H X W
+			image1 = np.transpose(image1, (2,0,1))
+			image2 = np.transpose(image2, (2,0,1))
+			sample = {'image1': image1, 'image2': image2, 'label': label}  
+
+			return sample
 
 class Siamese(nn.Module):
 	def __init__(self):
