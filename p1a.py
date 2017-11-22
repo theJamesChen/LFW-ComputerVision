@@ -67,20 +67,42 @@ class RandomRotationCenter(object):
 		return {'image1': image1, 'image2': image2, 'label': label}
 
 class RandomScaling(object):
-	"""Scales (0.7 to 1.3) randomly with a probability of 0.5, (scales first and then center crop to (128,128)"""
+	"""Scales (0.7 to 1.3) randomly with a probability of 0.5, (scales first and then center crop/pad to (128,128)"""
 	def __call__(self, sample):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
 		if random.random() < 0.5:
 			# Between 0.7 to 1.3
 			scalingfactor = random.uniform(0.7, 1.3)
+			th, tw = image_size
 			image1 = transform.rescale(image1, scalingfactor, mode='constant')
 			image2 = transform.rescale(image2, scalingfactor, mode='constant')
-			h, w, c = image1.shape
-			th, tw = image_size
-			starth = int(round((h - th) / 2.))
-			startw = int(round((w - tw) / 2.))
-			image1 = image1[starth:starth+th,startw:startw+tw]
-			image2 = image2[starth:starth+th,startw:startw+tw]
+			if scalingfactor >= 1:
+				h, w, c = image1.shape
+				starth = int(round((h - th) / 2.))
+				startw = int(round((w - tw) / 2.))
+				image1 = image1[starth:starth+th,startw:startw+tw]
+				image2 = image2[starth:starth+th,startw:startw+tw]
+			else:
+				# Calculates the padding needed for when scaling factor < 1
+				h_rescale, w_rescale, c_rescale = image1.shape
+				diff = int(round((th - h_rescale)/2))
+				# npad is a tuple of (n_before, n_after) for each dimension
+				npad = ((diff, diff), (diff, diff), (0, 0))
+				image1 = np.pad(image1, npad , mode='constant')
+				image2 = np.pad(image2, npad, mode='constant')
+			return {'image1': image1, 'image2': image2, 'label': label}
+		return {'image1': image1, 'image2': image2, 'label': label}
+
+class RandomTranslation(object):
+	"""Translates (-10 to 10) randomly with a probability of 0.5"""
+	def __call__(self, sample):
+		image1, image2, label = sample['image1'], sample['image2'], sample['label']
+		if random.random() < 0.5:
+			# Between -10 to 10
+			x_translation = random.uniform(-10, 10)
+			y_translation = random.uniform(-10, 10)
+			image1 = transform.warp(image1, transform.AffineTransform(translation = (x_translation, y_translation)), mode='constant')
+			image2 = transform.warp(image2, transform.AffineTransform(translation = (x_translation, y_translation)), mode='constant')
 			return {'image1': image1, 'image2': image2, 'label': label}
 		return {'image1': image1, 'image2': image2, 'label': label}
 
