@@ -140,11 +140,11 @@ class LFWDataset(Dataset):
 	def __init__(self, txt_file, root_dir, transform):
 		"""
 		Args:
-			txt_file (string): Path to the txt file with names of pictures
-			root_dir (string): Directory with all the images.
-			transform (callable, optional): Optional random transform to be applied on a sample:
-				mirror flipping, rotation (+/- 30 degrees rotation wrt the center), translation (+/- 10 pixels), scaling (0.7 to 1.3)
-				Any borders that don’t have valid image data make black
+		txt_file (string): Path to the txt file with names of pictures
+		root_dir (string): Directory with all the images.
+		transform (callable, optional): Optional random transform to be applied on a sample:
+			mirror flipping, rotation (+/- 30 degrees rotation wrt the center), translation (+/- 10 pixels), scaling (0.7 to 1.3)
+			Any borders that don’t have valid image data make black
 		"""
 		self.txt_file = pd.read_csv(txt_file, delim_whitespace=True, header=None)
 		self.root_dir = root_dir    
