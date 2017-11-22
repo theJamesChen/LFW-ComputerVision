@@ -256,6 +256,16 @@ class Siamese(nn.Module):
 
 def train(epoch, randomTransform, savePath, gpu):
 	'''randomTransform = TRUE for Data Augmentation '''
+	# ******* MODEL PARAM SETUP *******
+	print "<----------------", "Model Param Setup", "---------------->"
+	if gpu:
+		criterion = nn.BCELoss().cuda() #On GPU
+		model = Siamese().cuda() # On GPU
+	else:
+		criterion = nn.BCELoss()# On CPU
+		model = Siamese() # On CPU
+	model.float()
+	optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
 	print "<----------------", "Begin Training with Data Augmentation", randomTransform, "---------------->"
 	loss_history = []
 	iteration_history =[]
@@ -266,6 +276,7 @@ def train(epoch, randomTransform, savePath, gpu):
 	training_lfw = LFWDataset(txt_file=Config.training_txt, root_dir=Config.root_dir, transform=randomTransform)
 	training_dataloader = DataLoader(training_lfw, batch_size=Config.batch_size, shuffle=True, num_workers=4)
 
+	print "<----------------", "model.train() ON", "---------------->"
 	for n_epoch in range(1, (epoch+1)):
 		#Setting network to train
 		model.train()
@@ -283,7 +294,7 @@ def train(epoch, randomTransform, savePath, gpu):
 
 			if batch_idx % 10 == 0:
 				#print "Epoch %d, Batch Progress %d Loss %f" % (n_epoch, batch_idx, loss.data[0])
-				print('Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(n_epoch, (batch_idx + 1) * len(image1), len(training_dataloader.dataset), 100. * (batch_idx + 1) / len(training_dataloader), loss.data[0]))
+				print('Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(n_epoch, (batch_idx) * len(image1), len(training_dataloader.dataset), 100. * (batch_idx) / len(training_dataloader), loss.data[0]))
 				iteration_count += 10
 				iteration_history.append(iteration_count)
 				loss_history.append(loss.data[0])
@@ -298,14 +309,28 @@ def train(epoch, randomTransform, savePath, gpu):
 
 # ******* TESTING *******
 
-def test(testfile, gpu):
+def test(testfile, loadPath, gpu):
 	'''testfile should be either Config.training_txt or Config.testing_txt '''
+	# ******* MODEL PARAM SETUP *******
+	print "<----------------", "Model Param Setup", "---------------->"
+	if gpu:
+		criterion = nn.BCELoss().cuda() #On GPU
+		model = Siamese().cuda() # On GPU
+	else:
+		criterion = nn.BCELoss()# On CPU
+		model = Siamese() # On CPU
+	model.float()
+	optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
+
+	print "<----------------", "Loading Saved Network Weights", "---------------->"
+	model.load_state_dict(torch.load(loadPath))
+
 	print "<----------------", "Begin Testing", "---------------->"
 	# ******* SETUP DATASETS AND DATALOADERS *******
 	print "<----------------", "Setup Datasets and Dataloaders", "---------------->"
 	testing_lfw = LFWDataset(txt_file=testfile, root_dir=Config.root_dir, transform=False)
 	testing_dataloader = DataLoader(testing_lfw, batch_size=Config.batch_size, shuffle=True, num_workers=4)
-
+	print "<----------------", "Model.eval ON", "---------------->"
 	model.eval()
 	correct = 0
 	for batch_idx, data in enumerate(testing_dataloader):
@@ -388,12 +413,11 @@ def main():
 # ******* LOAD *******	
 	if args.load is not None:
 		 print "Automatically load the saved network weights from the file ", args.load, "and test over both the train and test data, displaying accuracy statistics for both"
-		 print "<----------------", "Loading Saved Network Weights", "---------------->"
-		 model.load_state_dict(torch.load(args.load))
+		 
 		 print "<----------------", "Testing Training Data", "---------------->"
-		 training_data_accuracy = test(Config.training_txt, gpu)
+		 training_data_accuracy = test(Config.training_txt, args.load, gpu)
 		 print "<----------------", "Testing Test Data", "---------------->"
-		 testing_data_accuracy = test(Config.testing_txt, gpu)
+		 testing_data_accuracy = test(Config.testing_txt, args.load, gpu)
 
 		 print "<----------------", "Summary", "---------------->"
 		 print "Training Accuracy", training_data_accuracy
@@ -402,17 +426,6 @@ def main():
 
 if __name__ == '__main__':
 	main()
-
-# ******* MODEL PARAM SETUP *******
-print "<----------------", "Model Param Setup", "---------------->"
-if gpu:
-	criterion = nn.BCELoss().cuda() #On GPU
-	model = Siamese().cuda() # On GPU
-else:
-	criterion = nn.BCELoss()# On CPU
-	model = Siamese() # On CPU
-model.float()
-optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
 
 
 # Debug
