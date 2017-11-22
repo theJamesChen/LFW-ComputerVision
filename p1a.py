@@ -41,16 +41,20 @@ class RandomHorizontalFlip(object):
 	def __call__(self, sample):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
 		if random.random() < 0.5:
-			return {'image1': np.fliplr(image1), 'image2': np.fliplr(image2), 'label': label}
-		return sample
+			image1 = np.fliplr(image1)
+		if random.random() < 0.5:
+			image2 = np.fliplr(image2)
+		return {'image1': image1, 'image2': image2, 'label': label}
 
 class RandomVerticalFlip(object):
 	"""Vertically flip the given sample randomly with a probability of 0.5."""
 	def __call__(self, sample):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
 		if random.random() < 0.5:
-			return {'image1': np.flipud(image1), 'image2': np.flipud(image2), 'label': label}
-		return sample
+			image1 = np.flipud(image1)
+		if random.random() < 0.5:
+			image2 = np.flipud(image2)
+		return {'image1': image1, 'image2': image2, 'label': label}
 
 class RandomRotationCenter(object):
 	"""Rotates (+/- 30 degrees wrt the center) randomly with a probability of 0.5"""
@@ -58,10 +62,11 @@ class RandomRotationCenter(object):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
 		if random.random() < 0.5:
 			# Between +/- 30 degrees
-			theta = random.uniform(-30, 30)
+			theta1 = random.uniform(-30, 30)
+			theta2 = random.uniform(-30, 30)
 			# False so that rotated image does not exactly fits, pads with black
-			image1 = transform.rotate(image1, theta, resize=False, mode='constant')
-			image2 = transform.rotate(image2, theta, resize=False, mode='constant')
+			image1 = transform.rotate(image1, theta1, resize=False, mode='constant')
+			image2 = transform.rotate(image2, theta2, resize=False, mode='constant')
 			return {'image1': image1, 'image2': image2, 'label': label}
 		return sample
 
@@ -71,16 +76,16 @@ class RandomScaling(object):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
 		if random.random() < 0.5:
 			# Between 0.7 to 1.3
-			scalingfactor = random.uniform(0.7, 1.3)
+			scalingfactor1 = random.uniform(0.7, 1.3)
+			scalingfactor2 = random.uniform(0.7, 1.3)
 			th, tw = image_size
-			image1 = transform.rescale(image1, scalingfactor, mode='constant')
-			image2 = transform.rescale(image2, scalingfactor, mode='constant')            
-			if scalingfactor >= 1:
+			image1 = transform.rescale(image1, scalingfactor1, mode='constant')
+			image2 = transform.rescale(image2, scalingfactor2, mode='constant')            
+			if scalingfactor1 >= 1:
 				h, w, c = image1.shape
 				starth = int(round((h - th) / 2.))
 				startw = int(round((w - tw) / 2.))
 				image1 = image1[starth:starth+th,startw:startw+tw]
-				image2 = image2[starth:starth+th,startw:startw+tw]
 			else:
 				# Calculates the padding needed for when scaling factor < 1
 				h_rescale, w_rescale, c_rescale = image1.shape
@@ -91,6 +96,20 @@ class RandomScaling(object):
 				# npad is a tuple of (n_before, n_after) for each dimension
 				npad = ((diff1, diff2), (diff1, diff2), (0, 0))
 				image1 = np.pad(image1, npad , mode='constant')
+			if scalingfactor2 >= 1:
+				h, w, c = image2.shape
+				starth = int(round((h - th) / 2.))
+				startw = int(round((w - tw) / 2.))
+				image2 = image2[starth:starth+th,startw:startw+tw]
+			else:
+				# Calculates the padding needed for when scaling factor < 1
+				h_rescale, w_rescale, c_rescale = image1.shape
+				diff = th - h_rescale
+				diff1, diff2 = diff//2, diff//2                
+				if diff % 2 != 0:
+					diff1, diff2 = diff//2, diff//2 + 1
+				# npad is a tuple of (n_before, n_after) for each dimension
+				npad = ((diff1, diff2), (diff1, diff2), (0, 0))
 				image2 = np.pad(image2, npad, mode='constant')
 			return {'image1': image1, 'image2': image2, 'label': label}
 		return sample
@@ -101,9 +120,9 @@ class RandomTranslation(object):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
 		if random.random() < 0.5:
 			# Between -10 to 10
-			x_translation = random.uniform(-10, 10)
-			y_translation = random.uniform(-10, 10)
+			x_translation, y_translation = random.uniform(-10, 10)
 			image1 = transform.warp(image1, transform.AffineTransform(translation = (x_translation, y_translation)), mode='constant')
+			x_translation, y_translation = random.uniform(-10, 10)
 			image2 = transform.warp(image2, transform.AffineTransform(translation = (x_translation, y_translation)), mode='constant')
 			return {'image1': image1, 'image2': image2, 'label': label}
 		return sample
