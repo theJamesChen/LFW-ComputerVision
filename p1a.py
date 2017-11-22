@@ -40,7 +40,7 @@ class ToTensor(object):
 		image1 = image1.transpose((2, 0, 1))
 		image2 = image2.transpose((2, 0, 1))
 		if gpu:
-			return {'image1': torch.from_numpy(image1.copy()).float().cuda(), 'image2': torch.from_numpy(image2.copy()).float().cuda(), 'label': label}
+			return {'image1': torch.from_numpy(image1.copy()).float(), 'image2': torch.from_numpy(image2.copy()).float(), 'label': label}
 		return {'image1': torch.from_numpy(image1.copy()).float(), 'image2': torch.from_numpy(image2.copy()).float(), 'label': label}
 
 class RandomHorizontalFlip(object):
