@@ -251,12 +251,19 @@ class Siamese(nn.Module):
 		x = self.model(x)
 		y = self.model(y)
 		# 16
-		x = x.view(-1, 16*16*512)
-		y = y.view(-1, 16*16*512)
+		x = x.view(-1, self.num_flat_features(x))
+		y = y.view(-1, self.num_flat_features(y))
 		x = self.fullyconnectedmodel(x)
 		y = self.fullyconnectedmodel(y)
 		
 		return x, y
+
+	def num_flat_features(self, x):
+		size = x.size()[1:]  # all dimensions except the batch dimension
+		num_features = 1
+		for s in size:
+	 		num_features *= s
+		return num_features
 
 # ******* TRAINING *******
 
