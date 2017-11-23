@@ -198,7 +198,10 @@ class ContrastiveLoss(nn.Module):
 	def forward(self, image1, image2, label):
 		pdist = nn.PairwiseDistance(p=2)
 		euclideanDistance = pdist(image1, image2)
-		loss = torch.mean(label * torch.pow(euclideanDistance,2) + (1-label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2))
+		#loss = torch.mean(label * torch.pow(euclideanDistance,2) + (1-label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2))
+		loss = label * torch.pow(euclideanDistance,2) + (1-label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2)
+		print loss.size()
+		loss = torch.mean(loss)
 		return loss
 
 class Siamese(nn.Module):
@@ -301,7 +304,6 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 			image1out, image2out = model(image1,image2)
 			#Zero the gradients
 			optimizer.zero_grad()
-			print image1out.size()
 			loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), torch.squeeze(label))
 			#loss = criterion(image1out, image2out, label)
 			loss.backward()
