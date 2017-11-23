@@ -265,7 +265,7 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 	# ******* MODEL PARAM SETUP *******
 	print "<----------------", "Model Param Setup", "---------------->"
 	if gpu:
-		criterion = ContrastiveLoss(margin).cuda() #On GPU
+		criterion = ContrastiveLoss(margin) #On GPU
 		model = Siamese().cuda() # On GPU
 	else:
 		criterion = ContrastiveLoss(margin)# On CPU
