@@ -353,7 +353,7 @@ def test(testfile, loadPath, gpu):
 		prediction[prediction <= 0.5] = 0
 
 		#Batch labels
-		correct += np.sum(np.equal(prediction, label))
+		correct += np.sum(np.equal(prediction, label.cpu()))
 	
 	percentcorrect = float(correct)/Config.batch_size/len(testing_dataloader)
 
