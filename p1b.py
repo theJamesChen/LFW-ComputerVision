@@ -290,7 +290,7 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 	# ******* SETUP DATASETS AND DATALOADERS *******
 	print "<----------------", "Setup Datasets and Dataloaders", "---------------->"
 	training_lfw = LFWDataset(txt_file=Config.training_txt, root_dir=Config.root_dir, transform=randomTransform)
-	training_dataloader = DataLoader(training_lfw, batch_size=Config.batch_size, shuffle=True, num_workers=4)
+	training_dataloader = DataLoader(training_lfw, batch_size=Config.batch_size, shuffle=True, num_workers=16)
 
 	print "<----------------", "model.train() ON", "---------------->"
 	for n_epoch in range(1, (epoch+1)):
