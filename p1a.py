@@ -303,7 +303,7 @@ def train(epoch, randomTransform, savePath, gpu):
 				loss_history.append(loss.data[0])
 
 	print "<----------------", "Epochs Ran", "---------------->"
-	text = ["Training", "WithDataAugmentation:", randomTransform ]
+	text = ["Training", "WithDataAugmentation:", str(randomTransform) ]
 	savePlot(iteration_history, loss_history, text)
 	print "<----------------", "Plot Saved", "---------------->"
 	torch.save(model.state_dict(), savePath)
