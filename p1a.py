@@ -295,7 +295,7 @@ def train(epoch, randomTransform, savePath, gpu):
 			loss.backward()
 			optimizer.step()
 
-			if batch_idx % 100 == 0:
+			if batch_idx % 10 == 0:
 				#print "Epoch %d, Batch Progress %d Loss %f" % (n_epoch, batch_idx, loss.data[0])
 				print('Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(n_epoch, (batch_idx) * len(image1), len(training_dataloader.dataset), 100. * (batch_idx) / len(training_dataloader), loss.data[0]))
 				iteration_count += 10
