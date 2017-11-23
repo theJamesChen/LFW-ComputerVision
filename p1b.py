@@ -383,7 +383,7 @@ def savePlot(iteration_history, loss_history, text):
 def parse_args():
 	parser = argparse.ArgumentParser(description='James Chen: p1b')
 	parser.add_argument('--epoch', type=int, default=20, help='Number of training EPOCH. Default is 20')
-	parser.add_argument('--margin', type=int, default=1.5, help='Sets margin term that nudges the network to separate features even more. Default is 1.5')
+	parser.add_argument('--margin', type=float, default=1.5, help='Sets margin term that nudges the network to separate features even more. Default is 1.5')
 	parser.add_argument("--load", help="Automatically load the saved network weights from the file LOAD and test over both the train and test data, displaying accuracy statistics for both")
 	parser.add_argument("--save", help="Train and save weight data into SAVE")
 	# Switch
