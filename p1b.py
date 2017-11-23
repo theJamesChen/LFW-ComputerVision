@@ -260,15 +260,15 @@ class Siamese(nn.Module):
 
 # ******* TRAINING *******
 
-def train(epoch, randomTransform, savePath, gpu):
+def train(epoch, randomTransform, savePath, gpu, margin):
 	'''randomTransform = TRUE for Data Augmentation '''
 	# ******* MODEL PARAM SETUP *******
 	print "<----------------", "Model Param Setup", "---------------->"
 	if gpu:
-		criterion = ContrastiveLoss().cuda() #On GPU
+		criterion = ContrastiveLoss(margin).cuda() #On GPU
 		model = Siamese().cuda() # On GPU
 	else:
-		criterion = ContrastiveLoss()# On CPU
+		criterion = ContrastiveLoss(margin)# On CPU
 		model = Siamese() # On CPU
 	model.float()
 	optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
@@ -315,15 +315,15 @@ def train(epoch, randomTransform, savePath, gpu):
 
 # ******* TESTING *******
 
-def test(testfile, loadPath, gpu):
+def test(testfile, loadPath, gpu, margin):
 	'''testfile should be either Config.training_txt or Config.testing_txt '''
 	# ******* MODEL PARAM SETUP *******
 	print "<----------------", "Model Param Setup", "---------------->"
 	if gpu:
-		criterion = ContrastiveLoss().cuda() #On GPU
+		criterion = ContrastiveLoss(margin).cuda() #On GPU
 		model = Siamese().cuda() # On GPU
 	else:
-		criterion = ContrastiveLoss()# On CPU
+		criterion = ContrastiveLoss(margin)# On CPU
 		model = Siamese() # On CPU
 	model.float()
 	optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
@@ -382,8 +382,8 @@ def savePlot(iteration_history, loss_history, text):
 
 def parse_args():
 	parser = argparse.ArgumentParser(description='James Chen: p1b')
-	parser.add_argument('--epoch', type=int, default=20,
-	                    help='Number of training EPOCH. Default is 20')
+	parser.add_argument('--epoch', type=int, default=20, help='Number of training EPOCH. Default is 20')
+	parser.add_argument('--margin', type=int, default=1.5, help='Sets margin term that nudges the network to separate features even more. Default is 1.5')
 	parser.add_argument("--load", help="Automatically load the saved network weights from the file LOAD and test over both the train and test data, displaying accuracy statistics for both")
 	parser.add_argument("--save", help="Train and save weight data into SAVE")
 	# Switch
@@ -416,18 +416,18 @@ def main():
 
 # ******* SAVE *******	
 	if args.save is not None:
-		 print "Train and save weight data into:", args.save, "with ", args.epoch, " epochs"
-		 train(args.epoch, transform, args.save, gpu)
+		 print "Train and save weight data into:", args.save, "with", args.epoch, "epochs", args.margin, "margin"
+		 train(args.epoch, transform, args.save, gpu, args.margin)
 		 print "<----------------", "SAVE DONE", "---------------->"
 
 # ******* LOAD *******	
 	if args.load is not None:
-		 print "Automatically load the saved network weights from the file ", args.load, "and test over both the train and test data, displaying accuracy statistics for both"
+		 print "Automatically load the saved network weights from the file", args.load, "and test over both the train and test data, displaying accuracy statistics for both"
 		 
 		 print "<----------------", "Testing Training Data", "---------------->"
-		 training_data_accuracy = test(Config.training_txt, args.load, gpu)
+		 training_data_accuracy = test(Config.training_txt, args.load, gpu, args.margin)
 		 print "<----------------", "Testing Test Data", "---------------->"
-		 testing_data_accuracy = test(Config.testing_txt, args.load, gpu)
+		 testing_data_accuracy = test(Config.testing_txt, args.load, gpu, args.margin)
 
 		 print "<----------------", "Summary", "---------------->"
 		 print "Training Accuracy", training_data_accuracy
