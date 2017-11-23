@@ -60,9 +60,9 @@ class RandomVerticalFlip(object):
 	"""Vertically flip the given sample randomly with a probability of 0.5."""
 	def __call__(self, sample):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
-		if random.random() < 0.5:
+		if random.random() < 0:
 			image1 = np.flipud(image1)
-		if random.random() < 0.5:
+		if random.random() < 0:
 			image2 = np.flipud(image2)
 		return {'image1': image1, 'image2': image2, 'label': label}
 
