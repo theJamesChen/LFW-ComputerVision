@@ -303,7 +303,7 @@ def train(epoch, randomTransform, savePath, gpu):
 				loss_history.append(loss.data[0])
 
 	print "<----------------", "Epochs Ran", "---------------->"
-	text = ["Training", " with Data Augmentation:", randomTransform ]
+	text = ["Training", "WithDataAugmentation:", randomTransform ]
 	savePlot(iteration_history, loss_history, text)
 	print "<----------------", "Plot Saved", "---------------->"
 	torch.save(model.state_dict(), savePath)
@@ -365,7 +365,7 @@ def test(testfile, loadPath, gpu):
 
 def savePlot(iteration_history, loss_history, text):
 	plt.plot(iteration_history,loss_history)
-	title = "Loss vs Iteration for " + text[0] + text[1]
+	title = "LossVsIterationFor " + text[0] + text[1]
 	plt.title(title)
 	plt.ylabel('Loss')
 	plt.xlabel('Iterations')
@@ -377,8 +377,8 @@ def savePlot(iteration_history, loss_history, text):
 
 def parse_args():
 	parser = argparse.ArgumentParser(description='James Chen: p1a')
-	parser.add_argument('--epoch', type=int, default=10,
-	                    help='Number of training EPOCH. Default is 10')
+	parser.add_argument('--epoch', type=int, default=20,
+	                    help='Number of training EPOCH. Default is 20')
 	parser.add_argument("--load", help="Automatically load the saved network weights from the file LOAD and test over both the train and test data, displaying accuracy statistics for both")
 	parser.add_argument("--save", help="Train and save weight data into SAVE")
 	# Switch
