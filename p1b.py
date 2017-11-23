@@ -244,7 +244,7 @@ class Siamese(nn.Module):
 			# 18
 			nn.ReLU(inplace=True),
 			# 19
-			nn.BatchNorm2d(1024)
+			nn.BatchNorm1d(1024)
 			)
 
 	def forward(self, x, y):
@@ -294,7 +294,7 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 			image1out, image2out = model(image1,image2)
 			#Zero the gradients
 			optimizer.zero_grad()
-			loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
+			loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), torch.squeeze(label))
 			#loss = criterion(image1out, image2out, label)
 			loss.backward()
 			optimizer.step()
