@@ -198,7 +198,6 @@ class ContrastiveLoss(nn.Module):
 	def forward(self, image1, image2, label):
 		euclideanDistance = nn.functional.pairwise_distance(image1, image2)
 		loss = torch.mean(label * torch.pow(euclideanDistance,2) + (1-label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2))
-
 		return loss
 
 class Siamese(nn.Module):
@@ -244,7 +243,7 @@ class Siamese(nn.Module):
 			# 18
 			nn.ReLU(inplace=True),
 			# 19
-			nn.BatchNorm1d(1024),
+			nn.BatchNorm1d(1024)
 			)
 
 	def forward(self, x, y):
