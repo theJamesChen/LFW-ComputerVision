@@ -24,7 +24,7 @@ class Config():
 	root_dir = './lfw/'
 	image_size = (128,128)
 	batch_size = 16
-	learning_rate = 1e-6
+	learning_rate = 1e-4
 	transform_probability = 0.7
 
 #plt.ion()	# interactive mode
