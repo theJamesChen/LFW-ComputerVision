@@ -340,7 +340,7 @@ def test(testfile, loadPath, gpu):
 		image1, image2, label = data['image1'], data['image2'], data['label']
 		if gpu:
 			image1, image2, label = image1.cuda(), image2.cuda(), label.cuda() # On GPU
-		image1, image2, label = Variable(image1.float(), volatile=True), Variable(image2.float(), volatile=True), label.float()
+		image1, image2, label = Variable(image1.float(), volatile=True), Variable(image2.float(), volatile=True), Variable(label.float(), volatile=True)
 		output = model(image1,image2)
 		loss = criterion(torch.squeeze(output), label)
 
@@ -353,7 +353,7 @@ def test(testfile, loadPath, gpu):
 		prediction[prediction <= 0.5] = 0
 
 		#Batch labels
-		correct += np.sum(np.equal(prediction, label))
+		correct += np.sum(np.equal(prediction, label.cpu().data.numpy()))
 	
 	percentcorrect = float(correct)/Config.batch_size/len(testing_dataloader)
 
