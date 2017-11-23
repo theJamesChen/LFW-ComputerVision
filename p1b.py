@@ -196,7 +196,8 @@ class ContrastiveLoss(nn.Module):
 		super(ContrastiveLoss, self).__init__()
 		self.margin = margin
 	def forward(self, image1, image2, label):
-		euclideanDistance = nn.PairwiseDistance(image1, image2)
+		pdist = nn.PairwiseDistance(p=2)
+		euclideanDistance = pdist(image1, image2)
 		loss = torch.mean(label * torch.pow(euclideanDistance,2) + (1-label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2))
 		return loss
 
