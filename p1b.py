@@ -337,7 +337,10 @@ def test(testfile, loadPath, gpu, margin):
 	optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
 
 	print "<----------------", "Loading Saved Network Weights", "---------------->"
-	model.load_state_dict(torch.load(loadPath))
+	if gpu:
+			model.load_state_dict(torch.load(loadPath))
+		else:
+			model.load_state_dict(torch.load(loadPath, map_location=lambda storage, loc: storage))
 
 	print "<----------------", "Begin Testing", "---------------->"
 	# ******* SETUP DATASETS AND DATALOADERS *******

@@ -60,9 +60,9 @@ class RandomVerticalFlip(object):
 	"""Vertically flip the given sample randomly with a probability of 0.5."""
 	def __call__(self, sample):
 		image1, image2, label = sample['image1'], sample['image2'], sample['label']
-		if random.random() < 0:
+		if random.random() < 0.0:
 			image1 = np.flipud(image1)
-		if random.random() < 0:
+		if random.random() < 0.0:
 			image2 = np.flipud(image2)
 		return {'image1': image1, 'image2': image2, 'label': label}
 
@@ -326,7 +326,10 @@ def test(testfile, loadPath, gpu):
 	optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
 
 	print "<----------------", "Loading Saved Network Weights", "---------------->"
-	model.load_state_dict(torch.load(loadPath))
+	if gpu:
+		model.load_state_dict(torch.load(loadPath))
+	else:
+		model.load_state_dict(torch.load(loadPath, map_location=lambda storage, loc: storage))
 
 	print "<----------------", "Begin Testing", "---------------->"
 	# ******* SETUP DATASETS AND DATALOADERS *******
