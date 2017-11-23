@@ -354,16 +354,16 @@ def test(testfile, loadPath, gpu, margin):
 		image1, image2, label = Variable(image1.float(), volatile=True), Variable(image2.float(), volatile=True), Variable(label.float(), volatile=True)
 		image1out, image2out = model(image1,image2)
 		loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
-		euclideanDistance = nn.functional.pairwise_distance(image1out, image2out)
+		pdist = nn.PairwiseDistance(p=2)
+		euclideanDistance = pdist(image1out, image2out)
 
 		if gpu:
 			prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
 		else:
 			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
-		#Set > 10 to 0, < 10 to 1
-		prediction[prediction > 10] = 0
-		prediction[prediction <= 10] = 1
+		prediction[prediction > 20] = 0
+		prediction[prediction <= 20] = 1
 
 		#Batch labels
 		correct += np.sum(np.equal(prediction, label.cpu().data.numpy()))
