@@ -250,8 +250,8 @@ class Siamese(nn.Module):
 		x = self.model(x)
 		y = self.model(y)
 		# 16
-		x = x.view(-1, 16*16*512)
-		y = y.view(-1, 16*16*512)
+		x = x.view(16*16*512,-1)
+		y = y.view(16*16*512,-1)
 		x = self.fullyconnectedmodel(x)
 		y = self.fullyconnectedmodel(y)
 		
