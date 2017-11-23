@@ -200,8 +200,8 @@ class ContrastiveLoss(nn.Module):
 		euclideanDistance = pdist(image1, image2)
 		#loss = torch.mean(label * torch.pow(euclideanDistance,2) + (1-label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2))
 		loss = label * torch.pow(euclideanDistance,2) + (1-label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2)
-		print loss.size()
 		loss = torch.mean(loss)
+		print loss.size()
 		return loss
 
 class Siamese(nn.Module):
