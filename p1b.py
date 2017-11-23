@@ -198,7 +198,7 @@ class ContrastiveLoss(nn.Module):
 	def forward(self, image1, image2, label):
 		pdist = nn.PairwiseDistance(p=2)
 		euclideanDistance = pdist(image1, image2)
-		loss = torch.mean(label * torch.pow(euclideanDistance,2) + (1-label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2))
+		loss = torch.mean((1-label) * torch.pow(euclideanDistance,2) + (label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2))
 		return loss
 
 class Siamese(nn.Module):
@@ -265,7 +265,7 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 	# ******* MODEL PARAM SETUP *******
 	print "<----------------", "Model Param Setup", "---------------->"
 	if gpu:
-		criterion = ContrastiveLoss(margin) #On GPU
+		criterion = ContrastiveLoss(margin).cuda() #On GPU
 		model = Siamese().cuda() # On GPU
 	else:
 		criterion = ContrastiveLoss(margin)# On CPU
