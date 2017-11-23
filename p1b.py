@@ -378,12 +378,12 @@ def test(testfile, loadPath, gpu, margin):
 
 def savePlot(iteration_history, loss_history, text):
 	plt.plot(iteration_history,loss_history)
-	title = "LossVsIterationFor " + text[0] + text[1] + text[2]
+	title = "p1bLossVsIterationFor " + text[0] + text[1] + text[2]
 	plt.title(title)
 	plt.ylabel('Loss')
 	plt.xlabel('Iterations')
 	#plt.show()
-	savetitle = "LossIteration" + text[0] + text[1] + text[2]
+	savetitle = "p1bLossIteration" + text[0] + text[1] + text[2]
 	plt.savefig(savetitle, bbox_inches='tight')
 
 # ******* PARSE ARGUMENTS *******
