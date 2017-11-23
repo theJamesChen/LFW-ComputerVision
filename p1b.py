@@ -293,14 +293,14 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 			image1out, image2out = model(image1,image2)
 			#Zero the gradients
 			optimizer.zero_grad()
-			#loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
-			loss = criterion(image1out, image2out, label)
+			loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
+			#loss = criterion(image1out, image2out, label)
 			loss.backward()
 			optimizer.step()
 
 			if batch_idx % 10 == 0:
 				#print "Epoch %d, Batch Progress %d Loss %f" % (n_epoch, batch_idx, loss.data[0])
-				print('Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(n_epoch, (batch_idx) * len(image1), len(training_dataloader.dataset), 100. * (batch_idx) / len(training_dataloader), loss.data[0]))
+				print('Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(n_epoch, (batch_idx) * len(image1), len(training_dataloader.dataset), 100. * (batch_idx) / len(training_dataloader), loss.data))
 				iteration_count += 10
 				iteration_history.append(iteration_count)
 				loss_history.append(loss.data[0])
