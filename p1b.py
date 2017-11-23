@@ -293,7 +293,8 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 			image1out, image2out = model(image1,image2)
 			#Zero the gradients
 			optimizer.zero_grad()
-			loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
+			#loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
+			loss = criterion(image1out, image2out, label)
 			loss.backward()
 			optimizer.step()
 
