@@ -361,9 +361,9 @@ def test(testfile, loadPath, gpu, margin):
 		else:
 			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
-		#Set > euclideanDistance to 0, < euclideanDistance to 1
-		prediction[prediction > euclideanDistance] = 0
-		prediction[prediction <= euclideanDistance] = 1
+		#Set > 10 to 0, < 10 to 1
+		prediction[prediction > 10] = 0
+		prediction[prediction <= 10] = 1
 
 		#Batch labels
 		correct += np.sum(np.equal(prediction, label.cpu().data.numpy()))
