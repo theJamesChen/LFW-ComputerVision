@@ -244,7 +244,7 @@ class Siamese(nn.Module):
 			# 18
 			nn.ReLU(inplace=True),
 			# 19
-			nn.BatchNorm1d(1024)
+			nn.BatchNorm2d(1024)
 			)
 
 	def forward(self, x, y):
