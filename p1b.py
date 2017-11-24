@@ -339,9 +339,9 @@ def test(testfile, loadPath, gpu, margin):
 
 	print "<----------------", "Loading Saved Network Weights", "---------------->"
 	if gpu:
-			model.load_state_dict(torch.load(loadPath))
-		else:
-			model.load_state_dict(torch.load(loadPath, map_location=lambda storage, loc: storage))
+		model.load_state_dict(torch.load(loadPath))
+	else:
+		model.load_state_dict(torch.load(loadPath, map_location=lambda storage, loc: storage))
 
 	print "<----------------", "Begin Testing", "---------------->"
 	# ******* SETUP DATASETS AND DATALOADERS *******
