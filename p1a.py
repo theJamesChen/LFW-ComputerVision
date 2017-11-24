@@ -388,8 +388,8 @@ def parse_args():
 	parser.add_argument('--cpu', action='store_true',
 						help='CPU mode ON')
 	# Switch
-	parser.add_argument('--transform', action='store_true',
-						help='Data Augmentation ON')
+	parser.add_argument('--notransform', action='store_true',
+						help='Data Augmentation OFF')
 	arg = parser.parse_args()
 	return arg
 
@@ -398,19 +398,19 @@ def main():
 	args = parse_args()
 	# Default Values
 	gpu = True
-	transform = False
+	transform = True
 	if args.cpu:
 		print "<----------------", "CPU MODE", "---------------->"
 		gpu = False
 	else:
 		print "<----------------", "GPU MODE", "---------------->"
 
-	if args.transform:
-		print "<----------------", "Data Augmentation ON", "---------------->"
-		transform = True
-	else:
+	if args.notransform:
 		print "<----------------", "Data Augmentation OFF", "---------------->"
 		transform = False
+	else:
+		print "<----------------", "Data Augmentation ON", "---------------->"
+		transform = True
 
 # ******* SAVE *******	
 	if args.save is not None:
