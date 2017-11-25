@@ -360,13 +360,12 @@ def test(testfile, loadPath, gpu):
 		#loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
 		pdist = nn.PairwiseDistance(p=2)
 		euclideanDistance = pdist(image1out, image2out)
-		clamped_eD = torch.tanh(euclideanDistance)
 		if gpu:
-			prediction = np.squeeze(clamped_eD.cpu().data.numpy())
+			prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
 		else:
-			prediction = np.squeeze(clamped_eD.data.numpy())
+			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
-		thresh = 0
+		thresh = 6
 		print prediction
 		prediction[prediction > thresh] = 0
 		prediction[prediction <= thresh] = 1
