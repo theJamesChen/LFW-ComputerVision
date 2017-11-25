@@ -368,8 +368,8 @@ def test(testfile, loadPath, gpu, margin):
 		#Higher distance = different
 		thresh = 1
 		#print prediction
-		prediction[prediction > thresh] = 0.0
-		prediction[prediction <= thresh] = 1.0
+		prediction[prediction > thresh] = 0
+		prediction[prediction <= thresh] = 1
 
 		#Batch labels
 		correct += np.sum(np.equal(prediction, label.cpu().data.numpy()))
