@@ -347,7 +347,7 @@ def test(testfile, loadPath, gpu):
 	# ******* SETUP DATASETS AND DATALOADERS *******
 	print "<----------------", "Setup Datasets and Dataloaders", "---------------->"
 	testing_lfw = LFWDataset(txt_file=testfile, root_dir=Config.root_dir, transform=False)
-	testing_dataloader = DataLoader(testing_lfw, batch_size=Config.batch_size, shuffle=False, num_workers=4)
+	testing_dataloader = DataLoader(testing_lfw, batch_size=Config.batch_size, shuffle=True, num_workers=4)
 	print "<----------------", "Model.eval ON", "---------------->"
 	model.eval()
 	correct = 0
@@ -367,7 +367,7 @@ def test(testfile, loadPath, gpu):
 			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
 		thresh = .75
-		#print prediction
+		print prediction
 		prediction[prediction > thresh] = 0
 		prediction[prediction <= thresh] = 1
 
