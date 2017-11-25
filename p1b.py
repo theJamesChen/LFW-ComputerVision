@@ -359,7 +359,7 @@ def test(testfile, loadPath, gpu, margin):
 		image1out, image2out = model(image1,image2)
 		#loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
 		pdist = nn.PairwiseDistance(p=2)
-		euclideanDistance = pdist(image1out, image2out)
+		euclideanDistance = pdist(torch.squeeze(image1out), torch.squeeze(image2out))
 
 		if gpu:
 			prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
