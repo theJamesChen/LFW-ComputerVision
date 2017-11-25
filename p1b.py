@@ -374,7 +374,7 @@ def test(testfile, loadPath, gpu, margin):
 		#Batch labels
 		print prediction.size
 		print label.size
-		correct += np.sum(np.equal(prediction, label))
+		correct += np.sum(np.equal(prediction, label.cpu().data.numpy()))
 	
 	percentcorrect = float(correct)/Config.batch_size/len(testing_dataloader)
 
