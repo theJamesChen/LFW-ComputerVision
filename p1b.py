@@ -372,8 +372,8 @@ def test(testfile, loadPath, gpu, margin):
 		prediction[prediction <= thresh] = 1
 
 		#Batch labels
-		print prediction.size
-		print label.cpu().numpy().size
+		print prediction
+		print label.cpu().numpy()
 		correct += np.sum(np.equal(prediction, label.cpu().numpy()))
 	
 	percentcorrect = float(correct)/Config.batch_size/len(testing_dataloader)
