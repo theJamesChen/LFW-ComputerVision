@@ -357,7 +357,7 @@ def test(testfile, loadPath, gpu, margin):
 			image1, image2, label = image1.cuda(), image2.cuda(), label.cuda() # On GPU
 		image1, image2, label = Variable(image1.float(), volatile=True), Variable(image2.float(), volatile=True), Variable(label.float(), volatile=True)
 		image1out, image2out = model(image1,image2)
-		loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
+		#loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
 		pdist = nn.PairwiseDistance(p=2)
 		euclideanDistance = pdist(image1out, image2out)
 
@@ -366,8 +366,8 @@ def test(testfile, loadPath, gpu, margin):
 		else:
 			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
-		thresh = np.mean(prediction)
-		print thresh
+		thresh = 1.0
+		print prediction
 		prediction[prediction > thresh] = 0
 		prediction[prediction <= thresh] = 1
 

@@ -345,7 +345,7 @@ def test(testfile, loadPath, gpu):
 			image1, image2, label = image1.cuda(), image2.cuda(), label.cuda() # On GPU
 		image1, image2, label = Variable(image1.float(), volatile=True), Variable(image2.float(), volatile=True), Variable(label.float(), volatile=True)
 		output = model(image1,image2)
-		loss = criterion(torch.squeeze(output), label)
+		#loss = criterion(torch.squeeze(output), label)
 
 		if gpu:
 			prediction = np.squeeze(output.cpu().data.numpy())
