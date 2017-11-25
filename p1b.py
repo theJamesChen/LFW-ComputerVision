@@ -329,13 +329,13 @@ def test(testfile, loadPath, gpu, margin):
 	# ******* MODEL PARAM SETUP *******
 	print "<----------------", "Model Param Setup", "---------------->"
 	if gpu:
-		criterion = ContrastiveLoss(margin).cuda() #On GPU
+		#criterion = ContrastiveLoss(margin).cuda() #On GPU
 		model = Siamese().cuda() # On GPU
 	else:
-		criterion = ContrastiveLoss(margin)# On CPU
+		#criterion = ContrastiveLoss(margin)# On CPU
 		model = Siamese() # On CPU
 	model.float()
-	optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
+	#optimizer = optim.Adam(model.parameters(),lr = Config.learning_rate)
 
 	print "<----------------", "Loading Saved Network Weights", "---------------->"
 	if gpu:
@@ -372,8 +372,8 @@ def test(testfile, loadPath, gpu, margin):
 		prediction[prediction <= thresh] = 1
 
 		#Batch labels
-		print prediction.size()
-		print label.size()
+		print prediction.size
+		print label.size
 		correct += np.sum(np.equal(prediction, label))
 	
 	percentcorrect = float(correct)/Config.batch_size/len(testing_dataloader)
