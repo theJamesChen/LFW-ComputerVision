@@ -324,7 +324,7 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 
 # ******* TESTING *******
 
-def test(testfile, loadPath, gpu, margin):
+def test(testfile, loadPath, gpu):
 	'''testfile should be either Config.training_txt or Config.testing_txt '''
 	# ******* MODEL PARAM SETUP *******
 	print "<----------------", "Model Param Setup", "---------------->"
@@ -347,7 +347,7 @@ def test(testfile, loadPath, gpu, margin):
 	# ******* SETUP DATASETS AND DATALOADERS *******
 	print "<----------------", "Setup Datasets and Dataloaders", "---------------->"
 	testing_lfw = LFWDataset(txt_file=testfile, root_dir=Config.root_dir, transform=False)
-	testing_dataloader = DataLoader(testing_lfw, batch_size=Config.batch_size, shuffle=True, num_workers=4)
+	testing_dataloader = DataLoader(testing_lfw, batch_size=Config.batch_size, shuffle=False, num_workers=4)
 	print "<----------------", "Model.eval ON", "---------------->"
 	model.eval()
 	correct = 0
@@ -366,7 +366,7 @@ def test(testfile, loadPath, gpu, margin):
 		else:
 			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
-		thresh = 10
+		thresh = .75
 		#print prediction
 		prediction[prediction > thresh] = 0
 		prediction[prediction <= thresh] = 1
@@ -439,9 +439,9 @@ def main():
 		 print "Automatically load the saved network weights from the file", args.load, "and test over both the train and test data, displaying accuracy statistics for both"
 		 
 		 print "<----------------", "Testing Training Data", "---------------->"
-		 training_data_accuracy = test(Config.training_txt, args.load, gpu, args.margin)
+		 training_data_accuracy = test(Config.training_txt, args.load, gpu)
 		 print "<----------------", "Testing Test Data", "---------------->"
-		 testing_data_accuracy = test(Config.testing_txt, args.load, gpu, args.margin)
+		 testing_data_accuracy = test(Config.testing_txt, args.load, gpu)
 
 		 print "<----------------", "Summary", "---------------->"
 		 print "Training Accuracy", training_data_accuracy
