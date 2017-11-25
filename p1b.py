@@ -366,8 +366,8 @@ def test(testfile, loadPath, gpu):
 		else:
 			prediction = np.squeeze(clamped_eD.data.numpy())
 		#Higher distance = different
-		thresh = 0.5
-		#print prediction
+		thresh = 0
+		print prediction
 		prediction[prediction > thresh] = 0
 		prediction[prediction <= thresh] = 1
 
