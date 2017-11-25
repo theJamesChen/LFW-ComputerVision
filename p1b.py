@@ -366,8 +366,8 @@ def test(testfile, loadPath, gpu, margin):
 		else:
 			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
-		thresh = 0.5
-		#print prediction
+		thresh = np.mean(prediction)
+		print thresh
 		prediction[prediction > thresh] = 0
 		prediction[prediction <= thresh] = 1
 
