@@ -362,9 +362,9 @@ def test(testfile, loadPath, gpu, margin):
 		euclideanDistance = pdist(image1out, image2out)
 
 		if gpu:
-			prediction = euclideanDistance.cpu().data.numpy()
+			prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
 		else:
-			prediction = euclideanDistance.data.numpy()
+			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
 		thresh = 1
 		#print prediction
