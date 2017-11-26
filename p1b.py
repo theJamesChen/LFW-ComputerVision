@@ -364,7 +364,7 @@ def test(testfile, loadPath, gpu):
 		#	prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
 		#else:
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
-		print euclideanDistance.data.cpu(), print euclideanDistance.size
+		print euclideanDistance.data.cpu(), euclideanDistance.size
 		if gpu:
 			pred = (euclideanDistance.data < 2)
 		else:
