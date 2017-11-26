@@ -359,16 +359,17 @@ def test(testfile, loadPath, gpu):
 		pdist = nn.PairwiseDistance(p=2)
 		#print image2out.cpu().data.numpy().shape, image2out.cpu().data.numpy().shape
 		euclideanDistance = pdist(image1out, image2out)
-		print euclideanDistance.data
+
 		#if gpu:
 		#	prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
 		#else:
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
-		thresh = 5
+		thresh = 1
 		if gpu:
 			pred = (euclideanDistance.data < thresh)
 		else:
 			pred = (euclideanDistance.data.numpy())
+
 		#Higher distance = different
 
 		correct += (torch.squeeze(pred) == torch.squeeze(label)).sum()
