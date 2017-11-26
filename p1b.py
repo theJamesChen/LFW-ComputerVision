@@ -359,12 +359,12 @@ def test(testfile, loadPath, gpu):
 		pdist = nn.PairwiseDistance(p=2)
 		#print image2out.cpu().data.numpy().shape, image2out.cpu().data.numpy().shape
 		euclideanDistance = pdist(image1out, image2out)
-		#y_pred_round = (distance.data < configs['decision_thresh']).cpu().numpy()
+		print euclideanDistance.data
 		#if gpu:
 		#	prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
 		#else:
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
-		thresh = 10
+		thresh = 5
 		if gpu:
 			pred = (euclideanDistance.data < thresh)
 		else:
