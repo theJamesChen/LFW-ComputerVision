@@ -364,13 +364,14 @@ def test(testfile, loadPath, gpu):
 		#	prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
 		#else:
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
-		print euclideanDistance.data.cpu(), euclideanDistance.size
+		
 		if gpu:
 			pred = (euclideanDistance.data < 2)
 		else:
 			pred = (euclideanDistance.data.numpy())
 		#Higher distance = different
 		#thresh = 2
+		print pred, pred.cpu().data.numpy().shape
 		correct += (pred == label).sum()
 		#print prediction, label.cpu().numpy()
 		#prediction[prediction > thresh] = 0
