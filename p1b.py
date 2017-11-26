@@ -359,20 +359,26 @@ def test(testfile, loadPath, gpu):
 		pdist = nn.PairwiseDistance(p=2)
 		#print image2out.cpu().data.numpy().shape, image2out.cpu().data.numpy().shape
 		euclideanDistance = pdist(image1out, image2out)
+		#y_pred_round = (distance.data < configs['decision_thresh']).cpu().numpy()
+		#if gpu:
+		#	prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
+		#else:
+		#	prediction = np.squeeze(euclideanDistance.data.numpy())
 		if gpu:
-			prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
+			pred = (euclideanDistance.data < 2)
 		else:
-			prediction = np.squeeze(euclideanDistance.data.numpy())
+			pred = (euclideanDistance.data.numpy())
 		#Higher distance = different
-		thresh = 2
-		print prediction, label.cpu().numpy()
+		#thresh = 2
+		correct += (pred == label).sum()
+		#print prediction, label.cpu().numpy()
 		prediction[prediction > thresh] = 0
 		prediction[prediction <= thresh] = 1
 
 		#Batch labels
 		#print prediction.shape, label.cpu().numpy().shape
-		correct += np.sum(np.equal(prediction, label.cpu().numpy()))
-		print correct
+		#correct += np.sum(np.equal(prediction, label.cpu().numpy()))
+		#print correct
 	percentcorrect = float(correct)/float(len(testing_lfw))
 
 	print "Accuracy:", percentcorrect
