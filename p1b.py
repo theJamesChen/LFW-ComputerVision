@@ -365,14 +365,14 @@ def test(testfile, loadPath, gpu):
 			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
 		thresh = 10
-		#print prediction, label.cpu().numpy()
+		print prediction, label.cpu().numpy()
 		prediction[prediction > thresh] = 0
 		prediction[prediction <= thresh] = 1
 
 		#Batch labels
 		#print prediction.shape, label.cpu().numpy().shape
 		correct += np.sum(np.equal(prediction, label.cpu().numpy()))
-	
+		print correct
 	percentcorrect = float(correct)/float(len(testing_lfw))
 
 	print "Accuracy:", percentcorrect
