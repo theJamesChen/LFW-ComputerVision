@@ -372,8 +372,8 @@ def test(testfile, loadPath, gpu):
 		#thresh = 2
 		correct += (pred == label).sum()
 		#print prediction, label.cpu().numpy()
-		prediction[prediction > thresh] = 0
-		prediction[prediction <= thresh] = 1
+		#prediction[prediction > thresh] = 0
+		#prediction[prediction <= thresh] = 1
 
 		#Batch labels
 		#print prediction.shape, label.cpu().numpy().shape
