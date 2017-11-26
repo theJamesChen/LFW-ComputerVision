@@ -23,7 +23,7 @@ class Config():
 	testing_txt = 'test.txt'
 	root_dir = './lfw/'
 	image_size = (128,128)
-	batch_size = 4
+	batch_size = 8
 	learning_rate = 1e-5
 	transform_probability = 0.7
 
