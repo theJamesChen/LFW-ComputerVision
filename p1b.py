@@ -349,6 +349,7 @@ def test(testfile, loadPath, gpu):
 	print "<----------------", "Model.eval ON", "---------------->"
 	model.eval()
 	correct = 0
+	histogram = []
 	for batch_idx, data in enumerate(testing_dataloader):
 		image1, image2, label = data['image1'], data['image2'], data['label']
 		if gpu:
@@ -364,7 +365,8 @@ def test(testfile, loadPath, gpu):
 		#	prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
 		#else:
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
-		print np.transpose(euclideanDistance.data.cpu().numpy())
+		#print np.transpose(euclideanDistance.data.cpu().numpy())
+		histogram.append(np.transpose(euclideanDistance.data.cpu().numpy()))
 		thresh = 0.75
 		if gpu:
 			pred = (euclideanDistance.data < thresh)
@@ -380,6 +382,11 @@ def test(testfile, loadPath, gpu):
 		#correct += np.sum(np.equal(prediction, label.cpu().numpy()))
 		#print correct
 	percentcorrect = float(correct)/float(len(testing_lfw))
+
+	#DEBUG
+	thefile = open('thefile.txt', 'w')
+	for item in histogram:
+		thefile.write("%s\n" % item)
 
 	print "Accuracy:", percentcorrect
 	print "<----------------", "Testing Complete", "---------------->"
