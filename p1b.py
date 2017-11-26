@@ -357,6 +357,7 @@ def test(testfile, loadPath, gpu):
 		image1out, image2out = model(image1,image2)
 		#loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
 		pdist = nn.PairwiseDistance(p=2)
+		print image2out.cpu().numpy().shape, image2out.cpu().numpy().shape
 		euclideanDistance = pdist(image1out, image2out)
 		if gpu:
 			prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
@@ -364,15 +365,15 @@ def test(testfile, loadPath, gpu):
 			prediction = np.squeeze(euclideanDistance.data.numpy())
 		#Higher distance = different
 		thresh = 10
-		print prediction, label.cpu().numpy()
+		#print prediction, label.cpu().numpy()
 		prediction[prediction > thresh] = 0
 		prediction[prediction <= thresh] = 1
 
 		#Batch labels
-		print prediction.shape, label.cpu().numpy().shape
+		#print prediction.shape, label.cpu().numpy().shape
 		correct += np.sum(np.equal(prediction, label.cpu().numpy()))
 	
-	percentcorrect = float(correct)/len(testing_lfw)
+	percentcorrect = float(correct)/float(len(testing_lfw))
 
 	print "Accuracy:", percentcorrect
 	print "<----------------", "Testing Complete", "---------------->"
