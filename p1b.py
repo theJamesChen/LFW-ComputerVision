@@ -372,7 +372,7 @@ def test(testfile, loadPath, gpu):
 		#Higher distance = different
 		#thresh = 2
 		print pred, label.numpy()
-		correct += (pred == label.numpy()).sum()
+		correct += (pred == label.cpu().numpy()).sum()
 		#print prediction, label.cpu().numpy()
 		#prediction[prediction > thresh] = 0
 		#prediction[prediction <= thresh] = 1
