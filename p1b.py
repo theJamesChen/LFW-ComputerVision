@@ -371,7 +371,7 @@ def test(testfile, loadPath, gpu):
 			pred = (euclideanDistance.data.numpy())
 		#Higher distance = different
 		#thresh = 2
-		print pred, label.numpy()
+		print pred, label.cpu().numpy()
 		correct += (pred == label.cpu().numpy()).sum()
 		#print prediction, label.cpu().numpy()
 		#prediction[prediction > thresh] = 0
