@@ -364,19 +364,15 @@ def test(testfile, loadPath, gpu):
 		#	prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
 		#else:
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
-		
+		thresh = 2
 		if gpu:
-			pred = (euclideanDistance.data < 2)
+			pred = (euclideanDistance.data < thresh)
 		else:
 			pred = (euclideanDistance.data.numpy())
 		#Higher distance = different
-		#thresh = 2
-		print torch.squeeze(pred), torch.squeeze(label)
-		correct += (torch.squeeze(pred) == torch.squeeze(label)).sum()
-		#print prediction, label.cpu().numpy()
-		#prediction[prediction > thresh] = 0
-		#prediction[prediction <= thresh] = 1
 
+		correct += (torch.squeeze(pred) == torch.squeeze(label)).sum()
+		
 		#Batch labels
 		#print prediction.shape, label.cpu().numpy().shape
 		#correct += np.sum(np.equal(prediction, label.cpu().numpy()))
