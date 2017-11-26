@@ -23,7 +23,7 @@ class Config():
 	testing_txt = 'test.txt'
 	root_dir = './lfw/'
 	image_size = (128,128)
-	batch_size = 16
+	batch_size = 4
 	learning_rate = 1e-5
 	transform_probability = 0.7
 
@@ -357,7 +357,7 @@ def test(testfile, loadPath, gpu):
 		image1out, image2out = model(image1,image2)
 		#loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
 		pdist = nn.PairwiseDistance(p=2)
-		print image2out.cpu().data.numpy().shape, image2out.cpu().data.numpy().shape
+		#print image2out.cpu().data.numpy().shape, image2out.cpu().data.numpy().shape
 		euclideanDistance = pdist(image1out, image2out)
 		if gpu:
 			prediction = np.squeeze(euclideanDistance.cpu().data.numpy())
