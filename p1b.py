@@ -197,15 +197,13 @@ class ContrastiveLoss(nn.Module):
 		self.margin = margin
 	def forward(self, image1, image2, label):
 		pdist = nn.PairwiseDistance(p=2)
-		euclideanDistance = pdist(image1, image2)
-		#print euclideanDistance
+		euclideanDistance = pdist(image1, image2) 
 		loss = torch.mean(label * torch.pow(euclideanDistance,2) + (1-label) * torch.pow(torch.clamp(self.margin - euclideanDistance, min = 0.0), 2))
 		return loss
 
 class Siamese(nn.Module):
 	def __init__(self):
 		super(Siamese, self).__init__()
-		#Make three sequential models to in order to implement flatten using view() and sigmoid activation
 		self.model = nn.Sequential(
 			# 1
 			nn.Conv2d(3, 64, 5, stride=(1,1), padding=2), #(in_channel size, out_channels size, kernel_size, stride, padding)
@@ -302,7 +300,7 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 			image1out, image2out = model(image1,image2)
 			#Zero the gradients
 			optimizer.zero_grad()
-			loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), torch.squeeze(label))
+			loss = criterion(torch.squeeze(image1out), torch.squeeze(image2out), label)
 			#loss = criterion(image1out, image2out, label)
 			loss.backward()
 			optimizer.step()
@@ -315,7 +313,7 @@ def train(epoch, randomTransform, savePath, gpu, margin):
 				loss_history.append(loss.data[0])
 
 	print "<----------------", "Epochs Ran", "---------------->"
-	text = ["Training", "WithDataAugmentation:", str(randomTransform) ]
+	text = ["Training", "WithDataAugmentation:", str(randomTransform)]
 	savePlot(iteration_history, loss_history, text)
 	print "<----------------", "Plot Saved", "---------------->"
 	torch.save(model.state_dict(), savePath)
@@ -371,9 +369,10 @@ def test(testfile, loadPath, gpu):
 		prediction[prediction <= thresh] = 1
 
 		#Batch labels
+		print prediction.shape, label.cpu().numpy().shape
 		correct += np.sum(np.equal(prediction, label.cpu().numpy()))
 	
-	percentcorrect = float(correct)/Config.batch_size/len(testing_dataloader)
+	percentcorrect = float(correct)/len(testing_lfw)
 
 	print "Accuracy:", percentcorrect
 	print "<----------------", "Testing Complete", "---------------->"
