@@ -370,7 +370,7 @@ def test(testfile, loadPath, gpu):
 		
 		#print np.squeeze(euclideanDistance.data.cpu().numpy())
 		#thresh = float(np.mean(np.squeeze(euclideanDistance.data.cpu().numpy())))
-		thresh = 3
+		thresh = 7
 		if gpu:
 			pred = (euclideanDistance.data < thresh)
 		else:
