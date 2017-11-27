@@ -367,7 +367,7 @@ def test(testfile, loadPath, gpu):
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
 		#print np.transpose(euclideanDistance.data.cpu().numpy())
 		#histogram.append(', '.join(map(str,np.squeeze((euclideanDistance.data.cpu().numpy())))))
-		thresh = 2.5
+		thresh = 6.5
 		if gpu:
 			pred = (euclideanDistance.data < thresh)
 		else:
@@ -433,7 +433,7 @@ def main():
 	else:
 		print "<----------------", "GPU MODE", "---------------->"
 
-	if args.notransform and not args.save:
+	if args.notransform and args.save is not None:
 		print "<----------------", "Data Augmentation OFF", "---------------->"
 		transform = False
 	else:
