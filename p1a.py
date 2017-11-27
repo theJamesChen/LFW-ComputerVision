@@ -405,7 +405,7 @@ def main():
 	else:
 		print "<----------------", "GPU MODE", "---------------->"
 
-	if args.notransform and args.save:
+	if args.notransform and not args.save:
 		print "<----------------", "Data Augmentation OFF", "---------------->"
 		transform = False
 	else:
