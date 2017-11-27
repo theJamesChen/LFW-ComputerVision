@@ -367,7 +367,7 @@ def test(testfile, loadPath, gpu):
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
 		#print np.transpose(euclideanDistance.data.cpu().numpy())
 		#histogram.append(', '.join(map(str,np.squeeze((euclideanDistance.data.cpu().numpy())))))
-		thresh = 10
+		thresh = 4
 		if gpu:
 			pred = (euclideanDistance.data < thresh)
 		else:
