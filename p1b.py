@@ -367,7 +367,7 @@ def test(testfile, loadPath, gpu):
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
 		#print np.transpose(euclideanDistance.data.cpu().numpy()), np.transpose(label.cpu().numpy())
 		#histogram.append(', '.join(map(str,np.squeeze((euclideanDistance.data.cpu().numpy())))))
-		thresh = 2.7
+		thresh = np.mean(euclideanDistance.data.cpu().numpy())
 		if gpu:
 			pred = (euclideanDistance.data < thresh)
 		else:
@@ -433,18 +433,17 @@ def main():
 	else:
 		print "<----------------", "GPU MODE", "---------------->"
 
-	if args.notransform and args.save is not None:
-		print "<----------------", "Data Augmentation OFF", "---------------->"
-		transform = False
-	else:
-		print "<----------------", "Data Augmentation ON", "---------------->"
-		transform = True
-
 # ******* SAVE *******	
 	if args.save is not None:
-		 print "Train and save weight data into:", args.save, "with", args.epoch, "epochs", args.margin, "margin"
-		 train(args.epoch, transform, args.save, gpu, args.margin)
-		 print "<----------------", "SAVE DONE", "---------------->"
+		if args.notransform:
+			print "<----------------", "Data Augmentation OFF", "---------------->"
+			transform = False
+		else:
+			print "<----------------", "Data Augmentation ON", "---------------->"
+			transform = True
+		print "Train and save weight data into:", args.save, "with", args.epoch, "epochs", args.margin, "margin"
+		train(args.epoch, transform, args.save, gpu, args.margin)
+		print "<----------------", "SAVE DONE", "---------------->"
 
 # ******* LOAD *******	
 	if args.load is not None:
