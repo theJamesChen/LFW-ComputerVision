@@ -367,6 +367,8 @@ def test(testfile, loadPath, gpu):
 		#	prediction = np.squeeze(euclideanDistance.data.numpy())
 		#print np.transpose(euclideanDistance.data.cpu().numpy()), np.transpose(label.cpu().numpy())
 		#histogram.append(', '.join(map(str,np.squeeze((euclideanDistance.data.cpu().numpy())))))
+		
+		print np.squeeze(euclideanDistance.data.cpu().numpy())
 		thresh = float(np.mean(np.squeeze(euclideanDistance.data.cpu().numpy())))
 		if gpu:
 			pred = (euclideanDistance.data < thresh)
@@ -374,7 +376,6 @@ def test(testfile, loadPath, gpu):
 			pred = (euclideanDistance.data.numpy() < thresh)
 
 		#Higher distance = different
-		print pred, label
 		correct += (torch.squeeze(pred) == torch.squeeze(label)).sum()
 		
 		#Batch labels
